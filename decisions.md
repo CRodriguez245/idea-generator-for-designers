@@ -15,3 +15,24 @@
 - **Optional Enhancements**
   - Add authentication later via Streamlit secrets or OAuth; polish responsive layout once the desktop experience is solid.
 
+## 2025-11-13 – Operational Guardrails
+
+- **OpenAI Budget**
+  - Cap usage at ~$5/month for v1; monitor before inviting more users.
+- **Storage & Retention**
+  - Use SQLite; keep session records for up to six months before pruning.
+- **Session Identity**
+  - Allow visitors to optionally enter a name/email; otherwise assign anonymous IDs.
+- **Secrets Management**
+  - Store keys in local `.env` during development and Streamlit Cloud secrets in deployment.
+- **Rate Limiting UX**
+  - On API rate-limit errors, show a friendly “please wait” message and retry guidance.
+- **Prompt Management**
+  - Maintain prompt templates in `prompts/`; log major changes in `decisions.md`.
+- **Observability**
+  - Structured logs to stdout plus lightweight error notifications (email/Slack) as needed.
+- **Performance Strategy**
+  - Parallelize GPT-4 and DALL·E calls where possible to keep the experience snappy.
+- **Export Roadmap**
+  - Next formats after copy-paste: PDF and downloadable JSON/CSV bundles.
+
