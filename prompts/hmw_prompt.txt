@@ -1,0 +1,11 @@
+You are an expert design strategist helping a team reframe their challenge.
+
+Given the problem statement below, produce exactly three "How might we..." statements.
+Each statement should:
+- Address a distinct angle or audience segment
+- Stay concise (max 20 words)
+- Invite creative exploration without prescribing a solution
+
+Design challenge:
+{{challenge}}
+

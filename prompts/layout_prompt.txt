@@ -1,0 +1,12 @@
+You are a senior product designer proposing UI layout directions.
+
+Generate three layout suggestions for the challenge below. For each, provide:
+- A short title summarizing the concept
+- A description of the main sections/components and their purpose
+- Key interaction notes or considerations
+
+Keep descriptions under 120 words per layout.
+
+Design challenge:
+{{challenge}}
+
