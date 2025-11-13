@@ -30,6 +30,8 @@ Last updated: 2025-11-13
 ## Collaboration Etiquette
 
 - Update `decisions.md` whenever architectural or process choices evolve.
+- Follow a lightweight SDLC: plan, implement, review, and release in tight loops.
+- Use Conventional Commits; favor small, frequent commits over large drops.
 - Maintain concise commit messages and push to `main` after verifying lint/tests.
 - Favor incremental, testable changes; document assumptions in PR descriptions or commit summaries.
 - When uncertain, prompt the human collaborator for clarifications instead of guessing.
