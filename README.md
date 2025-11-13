@@ -83,3 +83,23 @@ idea-generator/
 └── assets/
     └── sample_output/ # screenshots for documentation
 ```
+
+---
+
+## 🚀 Development & Deployment
+
+- **Prerequisites**
+  - Python 3.10+, `pip`, and a virtual environment (recommended).
+  - OpenAI API key stored in `.env` as `OPENAI_API_KEY` (file already gitignored).
+- **Local Setup**
+  - `pip install -r requirements.txt`
+  - `streamlit run app.py`
+  - Monitor usage to stay within the ~$5/month budget noted in `decisions.md`.
+- **Secrets & Configuration**
+  - Keep sensitive values in `.env` locally and Streamlit Cloud secrets in production.
+  - Update prompt templates in `prompts/`; record major changes in `decisions.md`.
+- **Deployment Path**
+  - Start locally, then deploy to Streamlit Community Cloud with the same repository.
+  - Configure secrets via Streamlit Cloud dashboard before sharing with testers.
+- **Collaboration**
+  - See `agent_instructions.md` for detailed development workflow expectations.
