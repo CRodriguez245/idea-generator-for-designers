@@ -40,6 +40,20 @@ Built for the course *AI for Rapid Prototyping*, this project explores:
 
 ---
 
+## 🔑 Core Feature Groups
+
+- **Problem Reframe Studio**
+  - Capture any design brief and instantly generate three fresh “How Might We” statements tuned for different audiences or constraints.
+  - Save, edit, or swap statements to explore alternative framing angles before moving forward.
+- **Concept Sketch Lab**
+  - Translate text concepts into three lightweight visual prompts and DALL·E 3 sketches for quick vibe checks.
+  - Export prompts or images to reference boards, whiteboards, or presentation decks.
+- **Layout Prototype Deck**
+  - Produce three UI layout directions with content structure, interaction notes, and suggested design systems.
+  - Streamlined comparisons help decide which concept to explore in high fidelity tools.
+
+---
+
 ## 🧩 How It Works
 
 1. **Input:** User enters a design challenge in plain language.
