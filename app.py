@@ -177,6 +177,8 @@ def render_main() -> None:
         unsafe_allow_html=True
     )
 
+    # Design Challenge Card
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.markdown("### Design Challenge")
     st.markdown(
         '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
@@ -216,6 +218,7 @@ def render_main() -> None:
             st.session_state["generation_complete"] = False
             st.session_state["error_message"] = "Generation was cancelled."
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Handle generation
     if generate_clicked and challenge.strip() and not st.session_state["is_generating"]:
@@ -251,7 +254,10 @@ def render_main() -> None:
             # Always rerun to update UI
             st.rerun()
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Results Overview Card
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.markdown("### Results Overview")
     st.markdown(
         '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
@@ -275,7 +281,7 @@ def render_main() -> None:
         # Show placeholder carousel during loading
         section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
         render_loading_carousel(section_names)
-        st.markdown("---")
+        st.markdown('</div>', unsafe_allow_html=True)
         return  # Don't show results while loading
     
     # Show results with carousel navigation
@@ -300,7 +306,7 @@ def render_main() -> None:
             st.session_state["current_section"] = new_section
             st.rerun()
         
-        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
         
         # Display current section content - ResearchBridge style structure
         if current_section == 0:  # HMW Reframes
@@ -350,6 +356,8 @@ def render_main() -> None:
     else:
         # Placeholder state
         st.info("Enter a challenge above and click Generate to see results.")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def inject_custom_css() -> None:
@@ -435,8 +443,6 @@ h4, .stMarkdown h4 {{
     padding-top: 2rem !important;
     padding-bottom: 3rem !important;
     max-width: 1000px !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
-    border-radius: 8px !important;
     margin-top: 1rem !important;
 }}
 
@@ -457,6 +463,20 @@ h4, .stMarkdown h4 {{
     font-size: 0.9375rem !important;
     margin-top: -0.5rem !important;
     margin-bottom: 1.5rem !important;
+}}
+
+/* Section cards - ResearchBridge style */
+.section-card {{
+    background-color: #ffffff !important;
+    padding: 2rem !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid #f0f0f0 !important;
+    margin-bottom: 2rem !important;
+}}
+
+.section-card h3 {{
+    margin-top: 0 !important;
 }}
 
 /* Primary buttons - blue with depth and shadows */
