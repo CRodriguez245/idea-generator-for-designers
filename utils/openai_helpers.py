@@ -208,10 +208,95 @@ async def generate_images(prompts: List[str]) -> List[Dict[str, Any]]:
         raise RuntimeError(f"Failed to generate images: {e}") from e
 
 
+async def generate_sketch_concepts(challenge: str, sketch_prompts: List[str]) -> List[str]:
+    """Generate conceptual explanations for each sketch idea that explain the design concept being conveyed."""
+    client = get_client()
+    
+    # Create a prompt that asks for conceptual explanations of the design ideas
+    concept_prompt = f"""Design challenge: {challenge}
+
+Three visual sketch concepts have been created for this challenge. For each sketch concept below, provide a brief explanation (1-2 sentences) that describes the DESIGN IDEA or CONCEPT being explored—focus on what design approach or solution concept the image represents, not visual style details.
+
+Sketch concepts:
+1. {sketch_prompts[0] if len(sketch_prompts) > 0 else "N/A"}
+2. {sketch_prompts[1] if len(sketch_prompts) > 1 else "N/A"}
+3. {sketch_prompts[2] if len(sketch_prompts) > 2 else "N/A"}
+
+For each, explain: What design idea or solution approach does this sketch concept explore? What problem does it address or what opportunity does it highlight?
+
+Format as numbered explanations, one per line."""
+
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a design strategist. For each sketch concept, provide a clear explanation (1-2 sentences) of the DESIGN IDEA or SOLUTION APPROACH being explored. Focus on what the concept represents conceptually, not visual style. Explain what design problem it addresses or what opportunity it highlights.",
+                },
+                {"role": "user", "content": concept_prompt},
+            ],
+            temperature=0.7,
+            max_tokens=400,
+        )
+        content = response.choices[0].message.content or ""
+        
+        # Parse numbered explanations - handle multi-line explanations
+        lines = content.split("\n")
+        explanations = []
+        current_explanation = None
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                if current_explanation:
+                    explanations.append(current_explanation)
+                    current_explanation = None
+                continue
+            
+            # Check if this line starts a new numbered explanation
+            if line[0].isdigit() or line.startswith(("•", "-")):
+                # Save previous explanation if exists
+                if current_explanation:
+                    explanations.append(current_explanation)
+                
+                # Start new explanation
+                for prefix in ["1.", "2.", "3.", "•", "-"]:
+                    if line.startswith(prefix):
+                        current_explanation = line[len(prefix) :].strip()
+                        break
+                else:
+                    current_explanation = line
+            elif current_explanation:
+                # Continue building current explanation
+                current_explanation += " " + line
+            else:
+                # First explanation without number
+                current_explanation = line
+        
+        # Add last explanation
+        if current_explanation:
+            explanations.append(current_explanation)
+        
+        # Clean up and ensure we have 3
+        cleaned = [exp.strip() for exp in explanations[:3] if exp.strip()]
+        
+        # Ensure we have 3 explanations
+        while len(cleaned) < 3:
+            cleaned.append("This sketch explores a design approach for addressing the challenge.")
+        
+        return cleaned[:3]
+    except Exception as e:
+        # Fallback to using sketch prompts as explanations
+        import sys
+        print(f"Warning: Failed to generate sketch concepts: {e}", file=sys.stderr)
+        return sketch_prompts[:3]
+
+
 async def generate_all(challenge: str) -> Dict[str, Any]:
     """
     Generate all outputs in parallel for speed.
-    Returns dict with 'hmw', 'sketch_prompts', 'images', 'layouts'.
+    Returns dict with 'hmw', 'sketch_prompts', 'images', 'layouts', 'sketch_concepts'.
     """
     # Generate HMW, sketch prompts, and layouts in parallel
     hmw_task = generate_hmw_statements(challenge)
@@ -224,10 +309,14 @@ async def generate_all(challenge: str) -> Dict[str, Any]:
 
     # Then generate images from sketch prompts
     images = await generate_images(sketch_prompts)
+    
+    # Generate conceptual explanations for each sketch
+    sketch_concepts = await generate_sketch_concepts(challenge, sketch_prompts)
 
     return {
         "hmw": hmw_results,
         "sketch_prompts": sketch_prompts,
         "images": images,
         "layouts": layouts,
+        "sketch_concepts": sketch_concepts,
     }

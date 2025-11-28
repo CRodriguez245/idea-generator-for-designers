@@ -43,6 +43,7 @@ def init_session_state() -> None:
         "sketch_results": [],
         "layout_results": [],
         "sketch_prompts": [],
+        "sketch_concepts": [],  # Conceptual explanations for each sketch
         "image_urls": [],
         "is_generating": False,
         "error_message": "",
@@ -77,6 +78,7 @@ async def run_generation(challenge: str) -> None:
         # Update session state
         st.session_state["hmw_results"] = results["hmw"]
         st.session_state["sketch_prompts"] = results["sketch_prompts"]
+        st.session_state["sketch_concepts"] = results.get("sketch_concepts", results["sketch_prompts"])
         st.session_state["layout_results"] = results["layouts"]
         st.session_state["image_urls"] = [img.get("url") for img in results["images"]]
         st.session_state["generation_complete"] = True
@@ -276,16 +278,19 @@ def render_main() -> None:
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
             st.markdown('<div class="result-heading">Concept Sketches:</div>', unsafe_allow_html=True)
             image_urls = st.session_state.get("image_urls", [])
-            sketch_prompts = st.session_state.get("sketch_prompts", [])
+            sketch_concepts = st.session_state.get("sketch_concepts", [])
+            # Fallback to sketch_prompts if concepts not available
+            if not sketch_concepts:
+                sketch_concepts = st.session_state.get("sketch_prompts", [])
             if image_urls:
                 for i, url in enumerate(image_urls, 1):
                     if url:
                         # Display smaller image
                         st.image(url, width=400)
-                        # Display explanation text below the image
-                        if i <= len(sketch_prompts) and sketch_prompts[i - 1]:
+                        # Display conceptual explanation text below the image
+                        if i <= len(sketch_concepts) and sketch_concepts[i - 1]:
                             st.markdown(
-                                f'<p style="margin-top: 0.75rem; margin-bottom: 1.5rem; color: #666666; font-size: 0.9375rem; line-height: 1.6;">{sketch_prompts[i - 1]}</p>',
+                                f'<p style="margin-top: 0.75rem; margin-bottom: 1.5rem; color: #666666; font-size: 0.9375rem; line-height: 1.6;">{sketch_concepts[i - 1]}</p>',
                                 unsafe_allow_html=True
                             )
                         if i < len(image_urls):
