@@ -467,19 +467,42 @@ h4, .stMarkdown h4 {{
 div[id^="card-"],
 div[class*="section-card"] {{
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    opacity: 0 !important;
 }}
 
-/* Hide any empty divs with shadows/borders that look like cards */
-div:empty:not([id]):not([class*="st"]) {{
+/* Hide ANY empty div that has shadows/borders/rounded corners - these are the white rectangles */
+div:empty,
+div:not(:has(*)) {{
     box-shadow: none !important;
     border: none !important;
     background: transparent !important;
 }}
 
-/* Hide Streamlit containers that are empty or only contain whitespace */
+/* Specifically target and hide empty divs with card-like styling */
+div[style*="shadow"],
+div[style*="border-radius"],
+div[style*="rounded"] {{
+    box-shadow: none !important;
+    border: none !important;
+}}
+
+/* Hide Streamlit containers that are empty */
 .stContainer:empty,
-.element-container:empty {{
+.element-container:empty,
+div[data-testid]:empty {{
     display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    visibility: hidden !important;
 }}
 
 /* Primary buttons - blue with depth and shadows */
@@ -821,40 +844,41 @@ div[data-testid]:not(:has(*)) {{
                     el.remove();
                 }
             });
-            // Remove empty containers that appear as white rectangles - very aggressive
-            document.querySelectorAll('.element-container, [data-testid], div[class*="container"], div[class*="block"], div').forEach(function(el) {
-                // Skip if it's inside a section card
-                if (el.closest('.section-card')) return;
+            // Aggressively remove empty containers that appear as white rectangles
+            document.querySelectorAll('div').forEach(function(el) {
+                // Skip if it's inside a section card wrapper or has important content
+                if (el.closest('.section-card-wrapper') || 
+                    el.id === 'design-challenge-start' || 
+                    el.id === 'design-challenge-end' ||
+                    el.id === 'results-overview-start' ||
+                    el.id === 'results-overview-end') {
+                    return;
+                }
                 
                 // Check if it's empty or only contains whitespace
-                const hasContent = el.children.length > 0 || (el.textContent && el.textContent.trim().length > 0);
-                const hasInputs = el.querySelector('input, textarea, button, img, h1, h2, h3, h4, h5, h6, p, label, .stMarkdown');
-                const hasShadow = window.getComputedStyle(el).boxShadow !== 'none';
-                const hasBorder = window.getComputedStyle(el).border !== 'none' && window.getComputedStyle(el).borderWidth !== '0px';
-                const hasBorderRadius = window.getComputedStyle(el).borderRadius !== '0px';
-                const isCard = el.classList.contains('section-card') || el.id.startsWith('card-');
-                const isEmpty = el.children.length === 0 && (!el.textContent || el.textContent.trim().length === 0);
+                const hasContent = el.children.length > 0;
+                const hasText = el.textContent && el.textContent.trim().length > 10;
+                const hasInputs = el.querySelector('input, textarea, button, img, h1, h2, h3, h4, h5, h6, p, label, .stMarkdown, iframe, canvas');
                 
-                // Remove empty containers with card-like styling (shadow + border + rounded corners)
-                if (isEmpty && !hasInputs && !isCard && (hasShadow || (hasBorder && hasBorderRadius))) {
+                const style = window.getComputedStyle(el);
+                const hasShadow = style.boxShadow !== 'none';
+                const hasBorder = style.border !== 'none' && style.borderWidth !== '0px' && style.borderStyle !== 'none';
+                const hasBorderRadius = style.borderRadius !== '0px';
+                const hasBackground = style.backgroundColor && style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent';
+                const hasPadding = style.paddingTop !== '0px' || style.paddingBottom !== '0px';
+                
+                // If empty and has card-like styling (shadow, border, rounded, padding, background), remove it
+                if (!hasContent && !hasText && !hasInputs && 
+                    (hasShadow || (hasBorder && hasBorderRadius && hasPadding && hasBackground))) {
                     el.style.display = 'none';
                     el.style.visibility = 'hidden';
                     el.style.height = '0';
                     el.style.margin = '0';
                     el.style.padding = '0';
+                    el.style.border = 'none';
+                    el.style.boxShadow = 'none';
+                    el.style.background = 'transparent';
                     el.remove();
-                }
-            });
-            
-            // Also specifically target and remove empty section-card divs that haven't been wrapped
-            document.querySelectorAll('.section-card, div[id^="card-"]').forEach(function(card) {
-                const hasRealContent = card.children.length > 0 && (
-                    card.querySelector('input, textarea, button, img, h1, h2, h3, .stMarkdown, .element-container') ||
-                    card.textContent.trim().length > 50 // Has substantial text content
-                );
-                if (!hasRealContent && card.children.length === 0) {
-                    card.style.display = 'none';
-                    card.remove();
                 }
             });
         }
