@@ -288,10 +288,6 @@ def render_main() -> None:
                     st.markdown(f"**{i}.** {stmt}")
                     if i < len(hmw_results):
                         st.markdown("---")
-                # Copy all button - using code block for easy selection
-                all_hmw = "\n".join(f"{i+1}. {stmt}" for i, stmt in enumerate(hmw_results))
-                with st.expander("Copy All HMW Statements"):
-                    st.code(all_hmw, language=None)
             else:
                 st.info("No reframes generated yet.")
         
@@ -327,8 +323,66 @@ def render_main() -> None:
         st.info("Enter a challenge above and click Generate to see results.")
 
 
+def inject_custom_css() -> None:
+    """Inject custom CSS for fonts and styling."""
+    css = """
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Yi:wght@400;600;700&display=swap');
+        
+        /* Apply Nuosu SIL font to headers - using Noto Serif Yi as web-available alternative */
+        h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stSubheader {
+            font-family: 'Noto Serif Yi', 'Nuosu SIL', 'Times New Roman', serif !important;
+            color: #000000 !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Apply Helvetica to body text */
+        body, .stMarkdown, .stText, .stTextInput, .stTextArea, .stButton, p, div, span {
+            font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
+            color: #000000 !important;
+        }
+        
+        /* Ensure white background */
+        .stApp {
+            background-color: #ffffff !important;
+        }
+        
+        /* Style main content area */
+        .main .block-container {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        /* Style sidebar */
+        .css-1d391kg {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Style buttons */
+        .stButton > button {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border: 1px solid #000000 !important;
+        }
+        
+        .stButton > button:hover {
+            background-color: #333333 !important;
+        }
+        
+        /* Style text inputs */
+        .stTextInput > div > div > input, .stTextArea > div > div > textarea {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #cccccc !important;
+        }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+
 def main() -> None:
     """Main entry point."""
+    inject_custom_css()
     init_session_state()
     render_sidebar()
     render_main()
