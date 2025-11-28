@@ -471,30 +471,35 @@ h4, .stMarkdown h4 {{
     margin-bottom: 1.5rem !important;
 }}
 
-/* Section cards - ResearchBridge style - direct styling */
-.section-card {{
+/* Section cards - ResearchBridge style - very visible cards */
+div.section-card,
+.section-card,
+[class*="section-card"] {{
     background-color: #ffffff !important;
     padding: 2rem 2.5rem !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
-    border: 1.5px solid #d0d0d0 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    border: 2px solid #c0c0c0 !important;
     margin: 1.5rem 0 2rem 0 !important;
     overflow: visible !important;
     position: relative !important;
     display: block !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    min-height: 100px !important;
 }}
 
-/* Style the section card container and all its contents */
+/* Target by ID as well */
 #design-challenge-card,
 #results-overview-card {{
     background-color: #ffffff !important;
     padding: 2rem 2.5rem !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
-    border: 1.5px solid #d0d0d0 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    border: 2px solid #c0c0c0 !important;
     margin: 1.5rem 0 2rem 0 !important;
+    display: block !important;
+    width: 100% !important;
 }}
 
 .section-card h3,
