@@ -142,51 +142,55 @@ def render_main() -> None:
         unsafe_allow_html=True
     )
 
-    # Design Challenge Card - use JavaScript wrapper approach
+    # Design Challenge Card - use Streamlit container with marker
     st.markdown(
-        '<div class="section-card" id="card-design-challenge">',
+        '<div id="design-challenge-start" style="display: none;"></div>',
         unsafe_allow_html=True
     )
-    st.markdown("### Design Challenge")
-    st.markdown(
-        '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
-        unsafe_allow_html=True
-    )
-    
-    challenge = st.text_area(
-        "What challenge are you solving?",
-        key="challenge_text",
-        height=120,
-        placeholder="Improve the bus stop experience for commuters during winter storms.",
-        help="Be specific about the problem, context, and users you're designing for."
-    )
-
-    col_submit, col_reset = st.columns([2, 1], gap="small")
-    with col_submit:
-        generate_clicked = st.button(
-            "Generate Concepts",
-            type="primary",
-            disabled=st.session_state["is_generating"] or not challenge.strip(),
+    with st.container():
+        st.markdown("### Design Challenge")
+        st.markdown(
+            '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
+            unsafe_allow_html=True
         )
-    with col_reset:
-        if st.button("Reset"):
-            # Clear all state including generation flags
-            for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message", "current_section"]:
-                if key in st.session_state:
-                    st.session_state[key] = [] if isinstance(st.session_state[key], list) else False
-            # Don't modify challenge_text directly - it's bound to a widget
-            # User can clear it manually or we use a separate reset mechanism
-            st.session_state["session_id"] = None
-            st.rerun()
-    
-    # Add a force reset button if stuck in generating state
-    if st.session_state.get("is_generating"):
-        if st.button("Cancel Generation", key="cancel_gen"):
-            st.session_state["is_generating"] = False
-            st.session_state["generation_complete"] = False
-            st.session_state["error_message"] = "Generation was cancelled."
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+        
+        challenge = st.text_area(
+            "What challenge are you solving?",
+            key="challenge_text",
+            height=120,
+            placeholder="Improve the bus stop experience for commuters during winter storms.",
+            help="Be specific about the problem, context, and users you're designing for."
+        )
+
+        col_submit, col_reset = st.columns([2, 1], gap="small")
+        with col_submit:
+            generate_clicked = st.button(
+                "Generate Concepts",
+                type="primary",
+                disabled=st.session_state["is_generating"] or not challenge.strip(),
+            )
+        with col_reset:
+            if st.button("Reset"):
+                # Clear all state including generation flags
+                for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message", "current_section"]:
+                    if key in st.session_state:
+                        st.session_state[key] = [] if isinstance(st.session_state[key], list) else False
+                # Don't modify challenge_text directly - it's bound to a widget
+                # User can clear it manually or we use a separate reset mechanism
+                st.session_state["session_id"] = None
+                st.rerun()
+        
+        # Add a force reset button if stuck in generating state
+        if st.session_state.get("is_generating"):
+            if st.button("Cancel Generation", key="cancel_gen"):
+                st.session_state["is_generating"] = False
+                st.session_state["generation_complete"] = False
+                st.session_state["error_message"] = "Generation was cancelled."
+                st.rerun()
+    st.markdown(
+        '<div id="design-challenge-end" style="display: none;"></div>',
+        unsafe_allow_html=True
+    )
 
     # Handle generation
     if generate_clicked and challenge.strip() and not st.session_state["is_generating"]:
@@ -224,16 +228,17 @@ def render_main() -> None:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Results Overview Card - use JavaScript wrapper approach
+    # Results Overview Card - use Streamlit container with marker
     st.markdown(
-        '<div class="section-card" id="card-results-overview">',
+        '<div id="results-overview-start" style="display: none;"></div>',
         unsafe_allow_html=True
     )
-    st.markdown("### Results Overview")
-    st.markdown(
-        '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
-        unsafe_allow_html=True
-    )
+    with st.container():
+        st.markdown("### Results Overview")
+        st.markdown(
+            '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
+            unsafe_allow_html=True
+        )
 
     # Show error if any
     if st.session_state.get("error_message"):
@@ -249,10 +254,13 @@ def render_main() -> None:
     if st.session_state.get("is_generating") and not has_results:
         st.info("Generating ideas... This may take 30-60 seconds. Please be patient.")
         st.warning("If this takes longer than 2 minutes, click 'Cancel Generation' and try again.")
-        # Show placeholder carousel during loading
-        section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
-        render_loading_carousel(section_names)
-        st.markdown('</div>', unsafe_allow_html=True)
+            # Show placeholder carousel during loading
+            section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
+            render_loading_carousel(section_names)
+        st.markdown(
+            '<div id="results-overview-end" style="display: none;"></div>',
+            unsafe_allow_html=True
+        )
         return  # Don't show results while loading
     
     # Show results with carousel navigation
@@ -327,8 +335,10 @@ def render_main() -> None:
     else:
         # Placeholder state
         st.info("Enter a challenge above and click Generate to see results.")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div id="results-overview-end" style="display: none;"></div>',
+        unsafe_allow_html=True
+    )
 
 
 def inject_custom_css() -> None:
@@ -437,30 +447,55 @@ h4, .stMarkdown h4 {{
 }}
 
 /* Section card wrappers - ResearchBridge style cards */
-/* Section cards - will be styled via JavaScript wrapping - only show if has content */
-.section-card:empty,
-.section-card:not(:has(*)) {{
-    display: none !important;
-}}
-
-.section-card:has(*) {{
+/* Style Streamlit containers as section cards - target containers between markers */
+#design-challenge-start ~ .stContainer,
+#design-challenge-start ~ div[data-testid*="stVerticalBlock"],
+#design-challenge-start ~ .element-container {{
     background-color: #ffffff !important;
     padding: 2rem 2.5rem !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
     border: 2px solid #c0c0c0 !important;
     margin: 1.5rem 0 2rem 0 !important;
-    display: block !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
     position: relative !important;
-    overflow: visible !important;
 }}
 
-.section-card h3,
-.section-card .stMarkdown h3 {{
-    margin-top: 0 !important;
-    padding-top: 0 !important;
+/* Hide containers after the end marker */
+#design-challenge-end ~ .stContainer,
+#results-overview-end ~ .stContainer {{
+    /* Don't style these - they're outside the card */
+}}
+
+#results-overview-start ~ .stContainer,
+#results-overview-start ~ div[data-testid*="stVerticalBlock"],
+#results-overview-start ~ .element-container {{
+    background-color: #ffffff !important;
+    padding: 2rem 2.5rem !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    border: 2px solid #c0c0c0 !important;
+    margin: 1.5rem 0 2rem 0 !important;
+    position: relative !important;
+}}
+
+/* Hide ALL empty section-card divs and any empty containers with card styling */
+.section-card,
+div[id^="card-"],
+div[class*="section-card"] {{
+    display: none !important;
+}}
+
+/* Hide any empty divs with shadows/borders that look like cards */
+div:empty:not([id]):not([class*="st"]) {{
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+}}
+
+/* Hide Streamlit containers that are empty or only contain whitespace */
+.stContainer:empty,
+.element-container:empty {{
+    display: none !important;
 }}
 
 /* Primary buttons - blue with depth and shadows */
@@ -840,41 +875,26 @@ div[data-testid]:not(:has(*)) {{
             });
         }
         
-        function wrapSectionCards() {
-            const designCard = document.getElementById('card-design-challenge');
-            const resultsCard = document.getElementById('card-results-overview');
-            
-            [designCard, resultsCard].forEach(function(card) {
-                if (!card || card.dataset.wrapped) return;
-                
-                let next = card.nextElementSibling;
-                const elementsToMove = [];
-                const stopAt = card === designCard ? 'card-results-overview' : null;
-                
-                while (next && (!stopAt || next.id !== stopAt)) {
-                    if (next.nodeType === 1 && next.id !== 'card-results-overview') {
-                        if (next.classList.contains('element-container') || 
-                            next.hasAttribute('data-testid') || 
-                            (next.tagName === 'DIV' && !next.classList.contains('section-card'))) {
-                            elementsToMove.push(next);
-                        }
-                    }
-                    const temp = next.nextElementSibling;
-                    if (next.id === stopAt) break;
-                    next = temp;
+        function removeEmptyCards() {
+            // Remove any empty section-card divs
+            document.querySelectorAll('.section-card, div[id^="card-"]').forEach(function(card) {
+                const hasContent = card.children.length > 0 || (card.textContent && card.textContent.trim().length > 20);
+                if (!hasContent) {
+                    card.style.display = 'none';
+                    card.style.visibility = 'hidden';
+                    card.style.height = '0';
+                    card.style.margin = '0';
+                    card.style.padding = '0';
+                    card.style.border = 'none';
+                    card.style.boxShadow = 'none';
+                    card.remove();
                 }
-                
-                elementsToMove.forEach(function(el) {
-                    card.appendChild(el);
-                });
-                
-                card.dataset.wrapped = 'true';
             });
         }
         
         function init() {
             removeAllDividers();
-            wrapSectionCards();
+            removeEmptyCards();
         }
         
         if (document.readyState === 'loading') {
@@ -885,7 +905,7 @@ div[data-testid]:not(:has(*)) {{
         
         const observer = new MutationObserver(function() {
             removeAllDividers();
-            wrapSectionCards();
+            removeEmptyCards();
         });
         
         observer.observe(document.body, { childList: true, subtree: true });
@@ -893,6 +913,7 @@ div[data-testid]:not(:has(*)) {{
         setTimeout(init, 100);
         setTimeout(init, 500);
         setTimeout(init, 1500);
+        setTimeout(init, 2500);
     })();
     </script>
     """, unsafe_allow_html=True)
