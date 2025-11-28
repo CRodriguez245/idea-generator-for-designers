@@ -612,6 +612,31 @@ div hr,
     clip: rect(0, 0, 0, 0) !important;
 }}
 
+/* Hide empty white rectangle dividers/containers */
+.element-container:empty,
+[data-testid="stHorizontalBlock"]:empty,
+div[class*="empty"]:empty,
+.stTextInput:empty,
+.stTextArea:empty,
+input[type="text"]:not([value]),
+input[type="text"][value=""],
+textarea:empty {{
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+}}
+
+/* Hide any Streamlit default spacing/padding elements that appear as white rectangles */
+[class*="stTextInput"]:not(:has(input)),
+[class*="stTextArea"]:not(:has(textarea)),
+div[style*="white"]:empty,
+div[style*="background"]:empty {{
+    display: none !important;
+}}
+
 /* Info/Warning/Error messages - with depth */
 .stInfo {{
     background-color: #e3f2fd !important;
@@ -751,6 +776,20 @@ div hr,
             document.querySelectorAll('[class*="divider"], [class*="separator"], [data-testid*="horizontal"]').forEach(function(div) {
                 if (div.tagName === 'HR' || div.querySelector('hr')) {
                     div.remove();
+                }
+            });
+            // Remove empty white rectangle input fields
+            document.querySelectorAll('input[type="text"]:not([value]), input[type="text"][value=""], textarea:empty, .stTextInput:empty, .stTextArea:empty').forEach(function(el) {
+                if (!el.closest('.section-card')) {
+                    el.style.display = 'none';
+                    el.remove();
+                }
+            });
+            // Remove empty containers that appear as white rectangles
+            document.querySelectorAll('.element-container:empty, [data-testid="stHorizontalBlock"]:empty').forEach(function(el) {
+                if (!el.querySelector('input') && !el.querySelector('textarea') && !el.querySelector('button')) {
+                    el.style.display = 'none';
+                    el.remove();
                 }
             });
         }
