@@ -142,11 +142,7 @@ def render_main() -> None:
         unsafe_allow_html=True
     )
 
-    # Design Challenge Card - wrapped in card container
-    st.markdown(
-        '<div class="section-card-wrapper">',
-        unsafe_allow_html=True
-    )
+    # Design Challenge Section
     st.markdown("### Design Challenge")
     st.markdown(
         '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
@@ -156,7 +152,7 @@ def render_main() -> None:
     challenge = st.text_area(
         "What challenge are you solving?",
         key="challenge_text",
-        height=120,
+        height=100,
         placeholder="Improve the bus stop experience for commuters during winter storms.",
         help="Be specific about the problem, context, and users you're designing for."
     )
@@ -186,7 +182,6 @@ def render_main() -> None:
             st.session_state["generation_complete"] = False
             st.session_state["error_message"] = "Generation was cancelled."
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
     # Handle generation
     if generate_clicked and challenge.strip() and not st.session_state["is_generating"]:
@@ -222,13 +217,10 @@ def render_main() -> None:
             # Always rerun to update UI
             st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    # Subtle gray hairline divider between sections
+    st.markdown('<div style="margin: 2rem 0; border-top: 1px solid #e0e0e0;"></div>', unsafe_allow_html=True)
     
-    # Results Overview Card - wrapped in card container
-    st.markdown(
-        '<div class="section-card-wrapper">',
-        unsafe_allow_html=True
-    )
+    # Results Overview Section
     st.markdown("### Results Overview")
     st.markdown(
         '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
@@ -252,7 +244,6 @@ def render_main() -> None:
         # Show placeholder carousel during loading
         section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
         render_loading_carousel(section_names)
-        st.markdown('</div>', unsafe_allow_html=True)
         return  # Don't show results while loading
     
     # Show results with carousel navigation
@@ -327,9 +318,6 @@ def render_main() -> None:
     else:
         # Placeholder state
         st.info("Enter a challenge above and click Generate to see results.")
-    
-    # Close the Results Overview card wrapper
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def inject_custom_css() -> None:
@@ -602,8 +590,10 @@ div[data-testid]:empty {{
 }}
 
 .stTextArea > div > div > textarea {{
-    min-height: 100px !important;
+    min-height: 80px !important;
     line-height: 1.6 !important;
+    resize: none !important;
+    overflow-y: hidden !important;
 }}
 
 /* Labels - Helvetica */
@@ -966,6 +956,46 @@ div[data-testid]:not(:has(*)) {{
         setTimeout(init, 500);
         setTimeout(init, 1500);
         setTimeout(init, 2500);
+        
+        // Auto-resize textarea based on content
+        function autoResizeTextarea() {
+            const textareas = document.querySelectorAll('textarea[data-testid*="stTextArea"]');
+            textareas.forEach(function(textarea) {
+                function adjustHeight() {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = Math.max(80, textarea.scrollHeight) + 'px';
+                }
+                
+                // Set initial height
+                adjustHeight();
+                
+                // Adjust on input
+                textarea.addEventListener('input', adjustHeight);
+                
+                // Adjust on load (for existing content)
+                if (textarea.value) {
+                    setTimeout(adjustHeight, 100);
+                }
+            });
+        }
+        
+        // Run auto-resize after DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', autoResizeTextarea);
+        } else {
+            autoResizeTextarea();
+        }
+        
+        // Also run when new elements are added
+        const resizeObserver = new MutationObserver(function() {
+            autoResizeTextarea();
+        });
+        
+        resizeObserver.observe(document.body, { childList: true, subtree: true });
+        
+        setTimeout(autoResizeTextarea, 100);
+        setTimeout(autoResizeTextarea, 500);
+        setTimeout(autoResizeTextarea, 1500);
     })();
     </script>
     """, unsafe_allow_html=True)
