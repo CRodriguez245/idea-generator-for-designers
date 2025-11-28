@@ -105,7 +105,117 @@ def render_carousel_navigation(current_index: int, total_items: int, key_prefix:
     return current_index
 
 
-def render_visual_carousel(section_names: List[str], current_index: int, key_prefix: str) -> int:
+def render_loading_carousel(section_names: List[str]) -> None:
+    """Render a loading state carousel."""
+    carousel_html = """
+    <style>
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            perspective: 1000px;
+        }
+        .carousel-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0;
+        }
+        .carousel-card {
+            transition: all 0.4s ease;
+            border-radius: 12px;
+            padding: 30px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: #666;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0.6;
+        }
+        .carousel-card.loading-active {
+            opacity: 1;
+            background: linear-gradient(135deg, #f0f0f0 0%, #d0d0d0 100%);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        .carousel-card.prev, .carousel-card.next {
+            transform: scale(0.7);
+            opacity: 0.3;
+        }
+        .carousel-card.prev {
+            margin-right: -150px;
+        }
+        .carousel-card.next {
+            margin-left: -150px;
+        }
+        .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+    <div class="carousel-container">
+        <div class="carousel-wrapper">
+    """
+    
+    for i, name in enumerate(section_names):
+        card_class = "carousel-card"
+        if i == 0:
+            card_class += " loading-active"
+        elif i == 1:
+            card_class += " next"
+        elif i == 2:
+            card_class += " next"
+        
+        carousel_html += f"""
+            <div class="{card_class}">
+                <div class="card-title">{name}</div>
+                <div style="font-size: 14px; margin-top: 10px;">Loading...</div>
+            </div>
+        """
+    
+    carousel_html += """
+        </div>
+    </div>
+    """
+    
+    st.markdown(carousel_html, unsafe_allow_html=True)
+
+
+def get_preview_content(section_index: int, preview_data: Dict[str, Any] | None) -> str:
+    """Get preview content for a section."""
+    if not preview_data:
+        return ""
+    
+    if section_index == 0:  # HMW
+        hmw = preview_data.get("hmw_results", [])
+        if hmw and len(hmw) > 0:
+            preview = hmw[0][:60] + "..." if len(hmw[0]) > 60 else hmw[0]
+            return f'<div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">{preview}</div>'
+    
+    elif section_index == 1:  # Sketches
+        image_urls = preview_data.get("image_urls", [])
+        if image_urls and len(image_urls) > 0 and image_urls[0]:
+            return '<div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">3 sketches ready</div>'
+    
+    elif section_index == 2:  # Layouts
+        layouts = preview_data.get("layout_results", [])
+        if layouts and len(layouts) > 0:
+            title = layouts[0].get("title", "Layout 1")
+            return f'<div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">{title}</div>'
+    
+    return ""
+
+
+def render_visual_carousel(section_names: List[str], current_index: int, key_prefix: str, preview_data: Dict[str, Any] | None = None) -> int:
     """
     Render a visual carousel with cards showing side previews.
     
@@ -113,6 +223,7 @@ def render_visual_carousel(section_names: List[str], current_index: int, key_pre
         section_names: List of section names
         current_index: Current active section index
         key_prefix: Unique prefix for button keys
+        preview_data: Optional dict with preview content for each section
     
     Returns:
         Selected index after navigation
@@ -136,7 +247,7 @@ def render_visual_carousel(section_names: List[str], current_index: int, key_pre
         .carousel-card {
             transition: all 0.4s ease;
             border-radius: 12px;
-            padding: 30px;
+            padding: 30px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             color: white;
@@ -145,27 +256,44 @@ def render_visual_carousel(section_names: List[str], current_index: int, key_pre
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
+            overflow: hidden;
         }
         .carousel-card.prev, .carousel-card.next {
-            opacity: 0.4;
-            transform: scale(0.8) rotateY(20deg);
+            opacity: 0.5;
+            transform: scale(0.75) rotateY(25deg);
             cursor: pointer;
+            filter: blur(1px);
         }
         .carousel-card.active {
             opacity: 1;
             transform: scale(1);
             z-index: 2;
+            width: 400px;
         }
         .carousel-card.prev {
-            margin-right: -100px;
+            margin-right: -120px;
+            width: 200px;
         }
         .carousel-card.next {
-            margin-left: -100px;
+            margin-left: -120px;
+            width: 200px;
         }
         .card-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             margin-bottom: 10px;
+        }
+        .carousel-card.prev .card-title, .carousel-card.next .card-title {
+            font-size: 16px;
+        }
+        .card-preview {
+            font-size: 12px;
+            margin-top: 10px;
+            opacity: 0.9;
+            line-height: 1.4;
+            max-height: 80px;
+            overflow: hidden;
         }
     </style>
     <div class="carousel-container">
@@ -181,9 +309,12 @@ def render_visual_carousel(section_names: List[str], current_index: int, key_pre
         else:
             card_class += " active"
         
+        preview = get_preview_content(i, preview_data) if preview_data else ""
+        
         carousel_html += f"""
             <div class="{card_class}">
                 <div class="card-title">{name}</div>
+                {preview}
             </div>
         """
     

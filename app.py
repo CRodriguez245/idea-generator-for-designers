@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 from utils.openai_helpers import generate_all
 from utils.session_store import SessionStore
-from utils.ui_helpers import create_export_text, format_hmw_for_display, format_layout_for_display, render_visual_carousel
+from utils.ui_helpers import create_export_text, format_hmw_for_display, format_layout_for_display, render_visual_carousel, render_loading_carousel
 
 # Load environment variables
 load_dotenv()
@@ -198,10 +198,15 @@ def render_main() -> None:
     if st.session_state.get("error_message"):
         st.error(st.session_state["error_message"])
 
-    # Show loading state
+    # Show loading state with placeholder carousel
     if st.session_state["is_generating"]:
         st.info("Generating ideas... This may take 30-60 seconds.")
-        st.spinner("Working on it...")
+        with st.spinner("Working on it..."):
+            # Show placeholder carousel during loading
+            section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
+            render_loading_carousel(section_names)
+        st.markdown("---")
+        return  # Don't show results while loading
 
     # Show results with carousel navigation
     if st.session_state.get("generation_complete") or (
@@ -211,8 +216,15 @@ def render_main() -> None:
         section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
         current_section = st.session_state.get("current_section", 0)
         
-        # Render visual carousel
-        new_section = render_visual_carousel(section_names, current_section, "section_nav")
+        # Prepare preview data for carousel
+        preview_data = {
+            "hmw_results": st.session_state.get("hmw_results", []),
+            "image_urls": st.session_state.get("image_urls", []),
+            "layout_results": st.session_state.get("layout_results", []),
+        }
+        
+        # Render visual carousel with previews
+        new_section = render_visual_carousel(section_names, current_section, "section_nav", preview_data)
         if new_section != current_section:
             st.session_state["current_section"] = new_section
             st.rerun()
