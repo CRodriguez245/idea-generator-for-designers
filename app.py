@@ -206,16 +206,17 @@ def render_main() -> None:
     if st.session_state.get("generation_complete") or (
         st.session_state.get("hmw_results") and not st.session_state["is_generating"]
     ):
-        col_hmw, col_sketch, col_layout = st.columns(3, gap="large")
+        tab1, tab2, tab3 = st.tabs(["HMW Reframes", "Concept Sketches", "Layout Ideas"])
 
-        with col_hmw:
+        with tab1:
             st.subheader("HMW Reframes")
             hmw_results = st.session_state.get("hmw_results", [])
             if hmw_results:
                 for i, stmt in enumerate(hmw_results, 1):
-                    with st.container():
-                        st.markdown(f"**{i}.** {stmt}")
-                        st.code(stmt, language=None)
+                    st.markdown(f"**{i}.** {stmt}")
+                    st.code(stmt, language=None)
+                    if i < len(hmw_results):
+                        st.markdown("---")
                 # Copy all button - using code block for easy selection
                 all_hmw = "\n".join(f"{i+1}. {stmt}" for i, stmt in enumerate(hmw_results))
                 with st.expander("Copy All HMW Statements"):
@@ -223,7 +224,7 @@ def render_main() -> None:
             else:
                 st.info("No reframes generated yet.")
 
-        with col_sketch:
+        with tab2:
             st.subheader("Concept Sketches")
             image_urls = st.session_state.get("image_urls", [])
             sketch_prompts = st.session_state.get("sketch_prompts", [])
@@ -233,34 +234,38 @@ def render_main() -> None:
                         st.image(url, caption=f"Sketch {i}", width='stretch')
                         with st.expander(f"View prompt {i}"):
                             st.code(prompt, language=None)
+                        if i < len(image_urls):
+                            st.markdown("---")
                     else:
                         st.warning(f"Image {i} failed to generate")
             else:
                 st.info("Sketches will appear here after generation.")
 
-        with col_layout:
+        with tab3:
             st.subheader("Layout Ideas")
             layout_results = st.session_state.get("layout_results", [])
             if layout_results:
                 for i, layout in enumerate(layout_results, 1):
-                    with st.container():
-                        title = layout.get("title", f"Layout {i}")
-                        desc = layout.get("description", "")
-                        st.markdown(f"**{i}. {title}**")
-                        st.write(desc)
+                    title = layout.get("title", f"Layout {i}")
+                    desc = layout.get("description", "")
+                    st.markdown(f"**{i}. {title}**")
+                    st.write(desc)
+                    with st.expander(f"View full description {i}"):
                         st.code(desc, language=None)
+                    if i < len(layout_results):
+                        st.markdown("---")
             else:
                 st.info("Layout suggestions will appear here after generation.")
     else:
         # Placeholder state
-        col_hmw, col_sketch, col_layout = st.columns(3, gap="large")
-        with col_hmw:
+        tab1, tab2, tab3 = st.tabs(["HMW Reframes", "Concept Sketches", "Layout Ideas"])
+        with tab1:
             st.subheader("HMW Reframes")
             st.info("Enter a challenge above and click Generate.")
-        with col_sketch:
+        with tab2:
             st.subheader("Concept Sketches")
             st.info("DALL·E images will appear here.")
-        with col_layout:
+        with tab3:
             st.subheader("Layout Ideas")
             st.info("UI layout suggestions will render here.")
 
