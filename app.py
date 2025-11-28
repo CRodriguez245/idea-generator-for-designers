@@ -142,55 +142,51 @@ def render_main() -> None:
         unsafe_allow_html=True
     )
 
-    # Design Challenge Card - use Streamlit container with marker
+    # Design Challenge Card - wrapped in card container
     st.markdown(
-        '<div id="design-challenge-start" style="display: none;"></div>',
+        '<div class="section-card-wrapper">',
         unsafe_allow_html=True
     )
-    with st.container():
-        st.markdown("### Design Challenge")
-        st.markdown(
-            '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
-            unsafe_allow_html=True
-        )
-        
-        challenge = st.text_area(
-            "What challenge are you solving?",
-            key="challenge_text",
-            height=120,
-            placeholder="Improve the bus stop experience for commuters during winter storms.",
-            help="Be specific about the problem, context, and users you're designing for."
-        )
+    st.markdown("### Design Challenge")
+    st.markdown(
+        '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
+        unsafe_allow_html=True
+    )
+    
+    challenge = st.text_area(
+        "What challenge are you solving?",
+        key="challenge_text",
+        height=120,
+        placeholder="Improve the bus stop experience for commuters during winter storms.",
+        help="Be specific about the problem, context, and users you're designing for."
+    )
 
-        col_submit, col_reset = st.columns([2, 1], gap="small")
-        with col_submit:
-            generate_clicked = st.button(
-                "Generate Concepts",
-                type="primary",
-                disabled=st.session_state["is_generating"] or not challenge.strip(),
-            )
-        with col_reset:
-            if st.button("Reset"):
-                # Clear all state including generation flags
-                for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message", "current_section"]:
-                    if key in st.session_state:
-                        st.session_state[key] = [] if isinstance(st.session_state[key], list) else False
-                # Don't modify challenge_text directly - it's bound to a widget
-                # User can clear it manually or we use a separate reset mechanism
-                st.session_state["session_id"] = None
-                st.rerun()
-        
-        # Add a force reset button if stuck in generating state
-        if st.session_state.get("is_generating"):
-            if st.button("Cancel Generation", key="cancel_gen"):
-                st.session_state["is_generating"] = False
-                st.session_state["generation_complete"] = False
-                st.session_state["error_message"] = "Generation was cancelled."
-                st.rerun()
-    st.markdown(
-        '<div id="design-challenge-end" style="display: none;"></div>',
-        unsafe_allow_html=True
-    )
+    col_submit, col_reset = st.columns([2, 1], gap="small")
+    with col_submit:
+        generate_clicked = st.button(
+            "Generate Concepts",
+            type="primary",
+            disabled=st.session_state["is_generating"] or not challenge.strip(),
+        )
+    with col_reset:
+        if st.button("Reset"):
+            # Clear all state including generation flags
+            for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message", "current_section"]:
+                if key in st.session_state:
+                    st.session_state[key] = [] if isinstance(st.session_state[key], list) else False
+            # Don't modify challenge_text directly - it's bound to a widget
+            # User can clear it manually or we use a separate reset mechanism
+            st.session_state["session_id"] = None
+            st.rerun()
+    
+    # Add a force reset button if stuck in generating state
+    if st.session_state.get("is_generating"):
+        if st.button("Cancel Generation", key="cancel_gen"):
+            st.session_state["is_generating"] = False
+            st.session_state["generation_complete"] = False
+            st.session_state["error_message"] = "Generation was cancelled."
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Handle generation
     if generate_clicked and challenge.strip() and not st.session_state["is_generating"]:
@@ -228,17 +224,16 @@ def render_main() -> None:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Results Overview Card - use Streamlit container with marker
+    # Results Overview Card - wrapped in card container
     st.markdown(
-        '<div id="results-overview-start" style="display: none;"></div>',
+        '<div class="section-card-wrapper">',
         unsafe_allow_html=True
     )
-    with st.container():
-        st.markdown("### Results Overview")
-        st.markdown(
-            '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
-            unsafe_allow_html=True
-        )
+    st.markdown("### Results Overview")
+    st.markdown(
+        '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
+        unsafe_allow_html=True
+    )
 
     # Show error if any
     if st.session_state.get("error_message"):
@@ -257,10 +252,7 @@ def render_main() -> None:
         # Show placeholder carousel during loading
         section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
         render_loading_carousel(section_names)
-        st.markdown(
-            '<div id="results-overview-end" style="display: none;"></div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('</div>', unsafe_allow_html=True)
         return  # Don't show results while loading
     
     # Show results with carousel navigation
@@ -335,10 +327,9 @@ def render_main() -> None:
     else:
         # Placeholder state
         st.info("Enter a challenge above and click Generate to see results.")
-    st.markdown(
-        '<div id="results-overview-end" style="display: none;"></div>',
-        unsafe_allow_html=True
-    )
+    
+    # Close the Results Overview card wrapper
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def inject_custom_css() -> None:
@@ -907,56 +898,55 @@ div[data-testid]:not(:has(*)) {{
             });
         }
         
-        function removeEmptyCards() {
-            // Remove any empty section-card divs or empty containers with card styling
-            document.querySelectorAll('.section-card, div[id^="card-"], div[class*="section-card"]').forEach(function(card) {
-                card.remove();
-            });
-            
-            // Find and style containers between markers as cards
-            const designStart = document.getElementById('design-challenge-start');
-            const designEnd = document.getElementById('design-challenge-end');
-            const resultsStart = document.getElementById('results-overview-start');
-            const resultsEnd = document.getElementById('results-overview-end');
-            
-            function wrapInCard(startMarker, endMarker) {
-                if (!startMarker) return;
+        function wrapCards() {
+            // Find all section-card-wrapper divs and wrap their following siblings
+            document.querySelectorAll('.section-card-wrapper').forEach(function(wrapper) {
+                // Skip if already wrapped
+                if (wrapper.dataset.wrapped === 'true') return;
                 
-                let current = startMarker.nextSibling;
                 const elementsToWrap = [];
+                let current = wrapper.nextSibling;
                 
-                while (current && current !== endMarker) {
-                    if (current.nodeType === 1) {
-                        if (current.classList && (
-                            current.classList.contains('element-container') ||
-                            current.classList.contains('stContainer') ||
-                            current.hasAttribute('data-testid')
-                        )) {
-                            elementsToWrap.push(current);
-                        }
+                // Find the closing </div> marker - it will be in a stMarkdown container
+                let foundCloseMarker = false;
+                let siblingCount = 0;
+                const maxSiblings = 50; // Safety limit
+                
+                while (current && siblingCount < maxSiblings && !foundCloseMarker) {
+                    // Check if this is a closing marker (empty div or markdown container with just </div>)
+                    if (current.textContent && current.textContent.includes('</div>') && 
+                        current.textContent.trim() === '</div>') {
+                        foundCloseMarker = true;
+                        current.remove(); // Remove the closing marker
+                        break;
                     }
-                    current = current.nextSibling;
+                    
+                    // Collect Streamlit elements to wrap
+                    if (current.nodeType === 1 && (
+                        current.classList.contains('element-container') ||
+                        current.hasAttribute('data-testid') ||
+                        (current.tagName === 'DIV' && current.querySelector('[class*="st"]'))
+                    )) {
+                        elementsToWrap.push(current);
+                    }
+                    
+                    const next = current.nextSibling;
+                    current = next;
+                    siblingCount++;
                 }
                 
-                // Create wrapper div for this section
-                if (elementsToWrap.length > 0) {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'section-card-wrapper';
-                    
-                    elementsToWrap[0].parentNode.insertBefore(wrapper, elementsToWrap[0]);
-                    elementsToWrap.forEach(function(el) {
-                        wrapper.appendChild(el);
-                    });
-                }
-            }
-            
-            wrapInCard(designStart, designEnd);
-            wrapInCard(resultsStart, resultsEnd);
+                // Move all collected elements into the wrapper
+                elementsToWrap.forEach(function(el) {
+                    wrapper.appendChild(el);
+                });
+                
+                wrapper.dataset.wrapped = 'true';
+            });
         }
         
         function init() {
             removeAllDividers();
-            removeEmptyCards();
+            wrapCards();
         }
         
         if (document.readyState === 'loading') {
@@ -967,7 +957,7 @@ div[data-testid]:not(:has(*)) {{
         
         const observer = new MutationObserver(function() {
             removeAllDividers();
-            removeEmptyCards();
+            wrapCards();
         });
         
         observer.observe(document.body, { childList: true, subtree: true });
