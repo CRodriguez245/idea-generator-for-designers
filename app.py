@@ -167,11 +167,21 @@ def render_main() -> None:
         )
     with col_reset:
         if st.button("Reset"):
-            for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete"]:
+            # Clear all state including generation flags
+            for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message"]:
                 st.session_state[key] = [] if isinstance(st.session_state.get(key), list) else False
             st.session_state["challenge_text"] = ""
             st.session_state["session_id"] = None
+            st.session_state["current_section"] = 0
             init_session_state()
+            st.rerun()
+    
+    # Add a force reset button if stuck in generating state
+    if st.session_state.get("is_generating"):
+        if st.button("Cancel Generation", key="cancel_gen"):
+            st.session_state["is_generating"] = False
+            st.session_state["generation_complete"] = False
+            st.session_state["error_message"] = "Generation was cancelled."
             st.rerun()
 
     # Handle generation
@@ -179,16 +189,32 @@ def render_main() -> None:
         st.session_state["is_generating"] = True
         st.session_state["generation_complete"] = False
         st.session_state["error_message"] = ""
+        
         # Run async generation (blocks UI, which is acceptable for this use case)
+        loop = None
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(run_generation(challenge))
-            loop.close()
         except Exception as e:
-            st.session_state["error_message"] = f"Generation failed: {str(e)}"
-        finally:
+            error_msg = str(e)
+            if "rate limit" in error_msg.lower() or "429" in error_msg:
+                st.session_state["error_message"] = "Rate limit reached. Please wait a moment and try again."
+            elif "OPENAI_API_KEY" in error_msg:
+                st.session_state["error_message"] = "API key not configured. Please set OPENAI_API_KEY in your .env file."
+            else:
+                st.session_state["error_message"] = f"Generation failed: {error_msg}"
             st.session_state["is_generating"] = False
+            st.session_state["generation_complete"] = False
+        finally:
+            if loop:
+                try:
+                    loop.close()
+                except Exception:
+                    pass
+            # Ensure is_generating is always cleared
+            if st.session_state.get("error_message") or not st.session_state.get("generation_complete"):
+                st.session_state["is_generating"] = False
             st.rerun()
 
     st.markdown("---")
@@ -199,12 +225,12 @@ def render_main() -> None:
         st.error(st.session_state["error_message"])
 
     # Show loading state with placeholder carousel
-    if st.session_state["is_generating"]:
-        st.info("Generating ideas... This may take 30-60 seconds.")
-        with st.spinner("Working on it..."):
-            # Show placeholder carousel during loading
-            section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
-            render_loading_carousel(section_names)
+    if st.session_state.get("is_generating"):
+        st.info("Generating ideas... This may take 30-60 seconds. Please be patient.")
+        st.warning("If this takes longer than 2 minutes, click 'Cancel Generation' and try again.")
+        # Show placeholder carousel during loading
+        section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
+        render_loading_carousel(section_names)
         st.markdown("---")
         return  # Don't show results while loading
 
