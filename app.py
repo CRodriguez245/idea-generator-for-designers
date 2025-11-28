@@ -64,18 +64,21 @@ def render_sidebar() -> None:
     """Render sidebar controls and contextual info."""
     with st.sidebar:
         st.title("Idea Generator")
-        st.caption(
-            "Rapid ideation assistant for designers. "
-            "Provide a design challenge to generate reframes, sketches, and layouts."
+        st.markdown(
+            '<p style="color: #666666; font-size: 0.875rem; line-height: 1.5; margin-top: -0.5rem;">'
+            'Rapid ideation assistant for designers. '
+            'Provide a design challenge to generate reframes, sketches, and layouts.'
+            '</p>',
+            unsafe_allow_html=True
         )
         st.markdown("---")
-        st.subheader("Session")
-        st.text_input("Name (optional)", key="user_name")
-        st.text_input("Email (optional)", key="user_email")
+        st.markdown("#### Session")
+        st.text_input("Name (optional)", key="user_name", placeholder="Name (optional)")
+        st.text_input("Email (optional)", key="user_email", placeholder="Email (optional)")
         
         if st.session_state.get("generation_complete"):
             st.markdown("---")
-            st.subheader("Export")
+            st.markdown("#### Export")
             export_text = create_export_text(
                 st.session_state["challenge_text"],
                 st.session_state["hmw_results"],
@@ -87,10 +90,16 @@ def render_sidebar() -> None:
                 export_text,
                 file_name="idea_generator_results.txt",
                 mime="text/plain",
+                use_container_width=True
             )
         
         st.markdown("---")
-        st.caption("Tip: Be specific about your design challenge for better results.")
+        st.markdown(
+            '<p style="color: #666666; font-size: 0.8125rem; line-height: 1.5; font-style: italic;">'
+            'Tip: Be specific about your design challenge for better results.'
+            '</p>',
+            unsafe_allow_html=True
+        )
 
 
 async def run_generation(challenge: str) -> None:
@@ -163,14 +172,23 @@ async def run_generation(challenge: str) -> None:
 def render_main() -> None:
     """Render the main UI layout."""
     st.title("Idea Generator for Designers")
-    st.write("Turn a single design challenge into reframes, sketches, and layouts — in seconds.")
+    st.markdown(
+        '<p class="section-description">Turn a single design challenge into reframes, sketches, and layouts — in seconds.</p>',
+        unsafe_allow_html=True
+    )
 
-    st.markdown("### 1. Design Challenge")
+    st.markdown("### Design Challenge")
+    st.markdown(
+        '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
+        unsafe_allow_html=True
+    )
+    
     challenge = st.text_area(
         "What challenge are you solving?",
         key="challenge_text",
         height=120,
         placeholder="Improve the bus stop experience for commuters during winter storms.",
+        help="Be specific about the problem, context, and users you're designing for."
     )
 
     col_submit, col_reset = st.columns([2, 1], gap="small")
@@ -234,7 +252,11 @@ def render_main() -> None:
             st.rerun()
 
     st.markdown("---")
-    st.markdown("### 2. Results Overview")
+    st.markdown("### Results Overview")
+    st.markdown(
+        '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
+        unsafe_allow_html=True
+    )
 
     # Show error if any
     if st.session_state.get("error_message"):
@@ -280,52 +302,58 @@ def render_main() -> None:
         
         st.markdown("---")
         
-        # Display current section content
+        # Display current section content - ResearchBridge style structure
         if current_section == 0:  # HMW Reframes
-            st.subheader("HMW Reframes")
+            st.markdown('<div class="result-section">', unsafe_allow_html=True)
             hmw_results = st.session_state.get("hmw_results", [])
             if hmw_results:
+                st.markdown('<div class="result-heading">How Might We Statements:</div>', unsafe_allow_html=True)
                 for i, stmt in enumerate(hmw_results, 1):
-                    st.markdown(f"**{i}.** {stmt}")
+                    st.markdown(f'<div class="result-content"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
                     if i < len(hmw_results):
-                        st.markdown("---")
+                        st.markdown("<div style='margin: 1.5rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
             else:
                 st.info("No reframes generated yet.")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         elif current_section == 1:  # Concept Sketches
-            st.subheader("Concept Sketches")
+            st.markdown('<div class="result-section">', unsafe_allow_html=True)
+            st.markdown('<div class="result-heading">Concept Sketches:</div>', unsafe_allow_html=True)
             image_urls = st.session_state.get("image_urls", [])
             if image_urls:
                 for i, url in enumerate(image_urls, 1):
                     if url:
                         st.image(url, caption=f"Sketch {i}", width='stretch')
                         if i < len(image_urls):
-                            st.markdown("---")
+                            st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
                     else:
                         st.warning(f"Image {i} failed to generate")
             else:
                 st.info("Sketches will appear here after generation.")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         elif current_section == 2:  # Layout Ideas
-            st.subheader("Layout Ideas")
+            st.markdown('<div class="result-section">', unsafe_allow_html=True)
+            st.markdown('<div class="result-heading">Layout Ideas:</div>', unsafe_allow_html=True)
             layout_results = st.session_state.get("layout_results", [])
             if layout_results:
                 for i, layout in enumerate(layout_results, 1):
                     title = layout.get("title", f"Layout {i}")
                     desc = layout.get("description", "")
-                    st.markdown(f"**{i}. {title}**")
-                    st.write(desc)
+                    st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
                     if i < len(layout_results):
-                        st.markdown("---")
+                        st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
             else:
                 st.info("Layout suggestions will appear here after generation.")
+            st.markdown('</div>', unsafe_allow_html=True)
     else:
         # Placeholder state
         st.info("Enter a challenge above and click Generate to see results.")
 
 
 def inject_custom_css() -> None:
-    """Inject custom CSS for fonts and styling."""
+    """Inject custom CSS matching ResearchBridge styling."""
     # Check if local font file exists
     font_path = Path(__file__).parent / "assets" / "fonts" / "NuosuSIL-Regular.ttf"
     
@@ -343,73 +371,271 @@ def inject_custom_css() -> None:
         # Fallback to web font
         font_declaration = "@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Yi:wght@400;600;700&display=swap');"
     
-    # Build CSS string - use regular string concatenation to avoid f-string issues
+    # ResearchBridge-inspired styling: clean, professional, blue accents
     css = f"""<style>
 {font_declaration}
 
-/* Apply Nuosu SIL font to headers */
-h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stSubheader {{
+/* Base typography - clean and readable */
+body {{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+    color: #1a1a1a !important;
+    line-height: 1.6 !important;
+}}
+
+/* Headers - clean and structured */
+h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
     font-family: 'Nuosu SIL', 'Noto Serif Yi', 'Times New Roman', serif !important;
     color: #000000 !important;
-    font-weight: 400 !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.5rem !important;
+    margin-top: 0 !important;
 }}
 
-/* Apply Helvetica to body text */
-body, .stMarkdown, .stText, .stTextInput, .stTextArea, p, div, span, label {{
-    font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
-    color: #000000 !important;
+h1, .stMarkdown h1 {{
+    font-size: 2rem !important;
+    margin-bottom: 0.25rem !important;
 }}
 
-/* Ensure white background */
+h2, .stMarkdown h2 {{
+    font-size: 1.5rem !important;
+    margin-top: 2rem !important;
+    margin-bottom: 0.5rem !important;
+}}
+
+h3, .stMarkdown h3 {{
+    font-size: 1.25rem !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+}}
+
+h4, .stMarkdown h4 {{
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin-top: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+}}
+
+/* Body text */
+.stMarkdown, .stText, p, div, span {{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+    color: #1a1a1a !important;
+    line-height: 1.6 !important;
+}}
+
+/* White background */
 .stApp {{
     background-color: #ffffff !important;
 }}
 
-/* Style main content area */
+/* Main content area */
 .main .block-container {{
     background-color: #ffffff !important;
-    color: #000000 !important;
+    color: #1a1a1a !important;
+    padding-top: 2rem !important;
+    padding-bottom: 3rem !important;
+    max-width: 1000px !important;
 }}
 
-/* Style sidebar */
-.css-1d391kg, [data-testid="stSidebar"] {{
-    background-color: #f8f9fa !important;
+/* Sidebar - light gray like ResearchBridge */
+[data-testid="stSidebar"] {{
+    background-color: #f5f5f5 !important;
+    border-right: 1px solid #e0e0e0 !important;
 }}
 
-/* Style buttons - make them readable with white text on black */
-.stButton > button {{
-    background-color: #000000 !important;
+[data-testid="stSidebar"] .stMarkdown {{
+    color: #4a4a4a !important;
+}}
+
+/* Section descriptions - subtle gray text */
+.section-description {{
+    color: #666666 !important;
+    font-size: 0.9375rem !important;
+    margin-top: -0.5rem !important;
+    margin-bottom: 1.5rem !important;
+}}
+
+/* Primary buttons - blue like ResearchBridge */
+.stButton > button[data-baseweb="button"][kind="primary"], 
+.stButton > button:has-text("Generate") {{
+    background-color: #1976d2 !important;
     color: #ffffff !important;
-    border: 2px solid #000000 !important;
+    border: none !important;
     font-weight: 500 !important;
-    padding: 0.5rem 1.5rem !important;
+    padding: 0.625rem 1.5rem !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+    font-size: 0.9375rem !important;
+}}
+
+.stButton > button[data-baseweb="button"][kind="primary"]:hover,
+.stButton > button:has-text("Generate"):hover {{
+    background-color: #1565c0 !important;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3) !important;
+}}
+
+/* Secondary buttons - outline style */
+.stButton > button[kind="secondary"] {{
+    background-color: transparent !important;
+    color: #1976d2 !important;
+    border: 1px solid #1976d2 !important;
+    font-weight: 500 !important;
+    padding: 0.625rem 1.5rem !important;
     border-radius: 4px !important;
     transition: all 0.2s ease !important;
 }}
 
-.stButton > button:hover {{
-    background-color: #333333 !important;
-    border-color: #333333 !important;
-    color: #ffffff !important;
+.stButton > button[kind="secondary"]:hover {{
+    background-color: #e3f2fd !important;
+    border-color: #1565c0 !important;
+    color: #1565c0 !important;
 }}
 
+/* Disabled buttons */
 .stButton > button:disabled {{
-    background-color: #cccccc !important;
-    color: #666666 !important;
-    border-color: #cccccc !important;
+    background-color: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    border-color: #e0e0e0 !important;
     cursor: not-allowed !important;
+    opacity: 0.6 !important;
 }}
 
-/* Style text inputs */
+/* Text inputs - clean borders */
 .stTextInput > div > div > input, .stTextArea > div > div > textarea {{
     background-color: #ffffff !important;
-    color: #000000 !important;
-    border: 1px solid #cccccc !important;
+    color: #1a1a1a !important;
+    border: 1px solid #bdbdbd !important;
+    border-radius: 4px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9375rem !important;
+    transition: all 0.2s ease !important;
 }}
 
 .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {{
-    border-color: #000000 !important;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1) !important;
+    border-color: #1976d2 !important;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1) !important;
+    outline: none !important;
+}}
+
+.stTextArea > div > div > textarea {{
+    min-height: 100px !important;
+    line-height: 1.6 !important;
+}}
+
+/* Labels */
+label {{
+    font-size: 0.875rem !important;
+    color: #424242 !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.5rem !important;
+}}
+
+/* Dividers - subtle */
+hr, .stMarkdown hr {{
+    border: none !important;
+    border-top: 1px solid #e0e0e0 !important;
+    margin: 2rem 0 !important;
+}}
+
+/* Info/Warning/Error messages */
+.stInfo {{
+    background-color: #e3f2fd !important;
+    border-left: 4px solid #1976d2 !important;
+    color: #1a1a1a !important;
+    padding: 1rem 1.25rem !important;
+    border-radius: 4px !important;
+}}
+
+.stError {{
+    background-color: #ffebee !important;
+    border-left: 4px solid #d32f2f !important;
+    color: #1a1a1a !important;
+    padding: 1rem 1.25rem !important;
+    border-radius: 4px !important;
+}}
+
+.stWarning {{
+    background-color: #fff3e0 !important;
+    border-left: 4px solid #f57c00 !important;
+    color: #1a1a1a !important;
+    padding: 1rem 1.25rem !important;
+    border-radius: 4px !important;
+}}
+
+/* Result sections - structured like ResearchBridge */
+.result-section {{
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+}}
+
+.result-heading {{
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #000000 !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
+}}
+
+.result-content {{
+    color: #1a1a1a !important;
+    line-height: 1.7 !important;
+    margin-bottom: 1rem !important;
+}}
+
+/* Images */
+.stImage > img {{
+    border-radius: 4px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    margin: 1rem 0 !important;
+}}
+
+.stImage > div {{
+    font-size: 0.875rem !important;
+    color: #666666 !important;
+    margin-top: 0.5rem !important;
+    font-style: italic !important;
+}}
+
+/* Lists */
+.stMarkdown ul, .stMarkdown ol {{
+    margin: 1rem 0 !important;
+    padding-left: 1.5rem !important;
+}}
+
+.stMarkdown li {{
+    margin: 0.5rem 0 !important;
+    line-height: 1.7 !important;
+}}
+
+/* Caption styling */
+.stCaption {{
+    color: #666666 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+}}
+
+/* Button groups - for mode selection style */
+.button-group {{
+    display: flex !important;
+    gap: 0.75rem !important;
+    margin-top: 1rem !important;
+    margin-bottom: 1.5rem !important;
+}}
+
+/* Tabs styling */
+.stTabs [data-baseweb="tab-list"] {{
+    gap: 0.5rem !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}}
+
+.stTabs [data-baseweb="tab"] {{
+    color: #666666 !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 500 !important;
+}}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] {{
+    color: #1976d2 !important;
+    border-bottom: 2px solid #1976d2 !important;
 }}
 </style>"""
     st.markdown(css, unsafe_allow_html=True)
