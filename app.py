@@ -254,9 +254,9 @@ def render_main() -> None:
     if st.session_state.get("is_generating") and not has_results:
         st.info("Generating ideas... This may take 30-60 seconds. Please be patient.")
         st.warning("If this takes longer than 2 minutes, click 'Cancel Generation' and try again.")
-            # Show placeholder carousel during loading
-            section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
-            render_loading_carousel(section_names)
+        # Show placeholder carousel during loading
+        section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
+        render_loading_carousel(section_names)
         st.markdown(
             '<div id="results-overview-end" style="display: none;"></div>',
             unsafe_allow_html=True
