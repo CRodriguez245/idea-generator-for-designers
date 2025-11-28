@@ -437,8 +437,13 @@ h4, .stMarkdown h4 {{
 }}
 
 /* Section card wrappers - ResearchBridge style cards */
-/* Section cards - will be styled via JavaScript wrapping */
-.section-card {{
+/* Section cards - will be styled via JavaScript wrapping - only show if has content */
+.section-card:empty,
+.section-card:not(:has(*)) {{
+    display: none !important;
+}}
+
+.section-card:has(*) {{
     background-color: #ffffff !important;
     padding: 2rem 2.5rem !important;
     border-radius: 12px !important;
@@ -798,22 +803,39 @@ div[data-testid]:not(:has(*)) {{
                 }
             });
             // Remove empty containers that appear as white rectangles - very aggressive
-            document.querySelectorAll('.element-container, [data-testid], div[class*="container"], div[class*="block"]').forEach(function(el) {
-                // Check if it's empty or only contains whitespace
-                const hasContent = el.children.length > 0 || el.textContent.trim().length > 0;
-                const hasInputs = el.querySelector('input, textarea, button, img, h1, h2, h3, h4, h5, h6, p, div.section-card');
-                const hasShadow = window.getComputedStyle(el).boxShadow !== 'none';
-                const isCard = el.classList.contains('section-card') || el.id.startsWith('card-');
+            document.querySelectorAll('.element-container, [data-testid], div[class*="container"], div[class*="block"], div').forEach(function(el) {
+                // Skip if it's inside a section card
+                if (el.closest('.section-card')) return;
                 
-                // If it's empty, has shadow (card-like), and is NOT a section card, remove it
-                if (!hasContent && !hasInputs && hasShadow && !isCard) {
+                // Check if it's empty or only contains whitespace
+                const hasContent = el.children.length > 0 || (el.textContent && el.textContent.trim().length > 0);
+                const hasInputs = el.querySelector('input, textarea, button, img, h1, h2, h3, h4, h5, h6, p, label, .stMarkdown');
+                const hasShadow = window.getComputedStyle(el).boxShadow !== 'none';
+                const hasBorder = window.getComputedStyle(el).border !== 'none' && window.getComputedStyle(el).borderWidth !== '0px';
+                const hasBorderRadius = window.getComputedStyle(el).borderRadius !== '0px';
+                const isCard = el.classList.contains('section-card') || el.id.startsWith('card-');
+                const isEmpty = el.children.length === 0 && (!el.textContent || el.textContent.trim().length === 0);
+                
+                // Remove empty containers with card-like styling (shadow + border + rounded corners)
+                if (isEmpty && !hasInputs && !isCard && (hasShadow || (hasBorder && hasBorderRadius))) {
                     el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                    el.style.height = '0';
+                    el.style.margin = '0';
+                    el.style.padding = '0';
                     el.remove();
                 }
-                // Also remove empty element containers between sections
-                if (el.classList.contains('element-container') && !hasContent && !hasInputs && !isCard) {
-                    el.style.display = 'none';
-                    el.remove();
+            });
+            
+            // Also specifically target and remove empty section-card divs that haven't been wrapped
+            document.querySelectorAll('.section-card, div[id^="card-"]').forEach(function(card) {
+                const hasRealContent = card.children.length > 0 && (
+                    card.querySelector('input, textarea, button, img, h1, h2, h3, .stMarkdown, .element-container') ||
+                    card.textContent.trim().length > 50 // Has substantial text content
+                );
+                if (!hasRealContent && card.children.length === 0) {
+                    card.style.display = 'none';
+                    card.remove();
                 }
             });
         }
