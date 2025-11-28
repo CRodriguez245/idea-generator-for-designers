@@ -465,18 +465,40 @@ h4, .stMarkdown h4 {{
     margin-bottom: 1.5rem !important;
 }}
 
-/* Section cards - ResearchBridge style */
-.section-card {{
+/* Section cards - ResearchBridge style with clear borders */
+div.section-card,
+[class*="section-card"] {{
     background-color: #ffffff !important;
     padding: 2rem !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-    border: 1px solid #f0f0f0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid #d0d0d0 !important;
     margin-bottom: 2rem !important;
+    margin-top: 1rem !important;
+    overflow: visible !important;
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }}
 
-.section-card h3 {{
+.section-card h3,
+.section-card .stMarkdown h3 {{
     margin-top: 0 !important;
+    padding-top: 0 !important;
+}}
+
+/* Ensure Streamlit elements inside cards inherit card styling */
+.section-card .element-container,
+.section-card .stTextArea,
+.section-card .stButton {{
+    margin-bottom: 1rem !important;
+}}
+
+/* Override Streamlit's default block container for cards */
+.section-card .block-container {{
+    padding: 0 !important;
+    max-width: 100% !important;
 }}
 
 /* Primary buttons - blue with depth and shadows */
