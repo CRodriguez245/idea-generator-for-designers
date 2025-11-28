@@ -177,51 +177,52 @@ def render_main() -> None:
         unsafe_allow_html=True
     )
 
-    # Design Challenge Card - wrap in HTML container with inline styles
-    st.markdown(
-        '<div class="section-card" id="design-challenge-card" style="background-color: #ffffff; padding: 2rem 2.5rem; border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08); border: 2px solid #c0c0c0; margin: 1.5rem 0 2rem 0;">',
-        unsafe_allow_html=True
-    )
-    st.markdown("### Design Challenge")
-    st.markdown(
-        '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
-        unsafe_allow_html=True
-    )
-    
-    challenge = st.text_area(
-        "What challenge are you solving?",
-        key="challenge_text",
-        height=120,
-        placeholder="Improve the bus stop experience for commuters during winter storms.",
-        help="Be specific about the problem, context, and users you're designing for."
-    )
-
-    col_submit, col_reset = st.columns([2, 1], gap="small")
-    with col_submit:
-        generate_clicked = st.button(
-            "Generate Concepts",
-            type="primary",
-            disabled=st.session_state["is_generating"] or not challenge.strip(),
+    # Design Challenge Card - use container approach
+    with st.container():
+        st.markdown(
+            '<div class="section-card-wrapper" data-section="design-challenge">',
+            unsafe_allow_html=True
         )
-    with col_reset:
-        if st.button("Reset"):
-            # Clear all state including generation flags
-            for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message", "current_section"]:
-                if key in st.session_state:
-                    st.session_state[key] = [] if isinstance(st.session_state[key], list) else False
-            # Don't modify challenge_text directly - it's bound to a widget
-            # User can clear it manually or we use a separate reset mechanism
-            st.session_state["session_id"] = None
-            st.rerun()
-    
-    # Add a force reset button if stuck in generating state
-    if st.session_state.get("is_generating"):
-        if st.button("Cancel Generation", key="cancel_gen"):
-            st.session_state["is_generating"] = False
-            st.session_state["generation_complete"] = False
-            st.session_state["error_message"] = "Generation was cancelled."
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("### Design Challenge")
+        st.markdown(
+            '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
+            unsafe_allow_html=True
+        )
+        
+        challenge = st.text_area(
+            "What challenge are you solving?",
+            key="challenge_text",
+            height=120,
+            placeholder="Improve the bus stop experience for commuters during winter storms.",
+            help="Be specific about the problem, context, and users you're designing for."
+        )
+
+        col_submit, col_reset = st.columns([2, 1], gap="small")
+        with col_submit:
+            generate_clicked = st.button(
+                "Generate Concepts",
+                type="primary",
+                disabled=st.session_state["is_generating"] or not challenge.strip(),
+            )
+        with col_reset:
+            if st.button("Reset"):
+                # Clear all state including generation flags
+                for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message", "current_section"]:
+                    if key in st.session_state:
+                        st.session_state[key] = [] if isinstance(st.session_state[key], list) else False
+                # Don't modify challenge_text directly - it's bound to a widget
+                # User can clear it manually or we use a separate reset mechanism
+                st.session_state["session_id"] = None
+                st.rerun()
+        
+        # Add a force reset button if stuck in generating state
+        if st.session_state.get("is_generating"):
+            if st.button("Cancel Generation", key="cancel_gen"):
+                st.session_state["is_generating"] = False
+                st.session_state["generation_complete"] = False
+                st.session_state["error_message"] = "Generation was cancelled."
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Handle generation
     if generate_clicked and challenge.strip() and not st.session_state["is_generating"]:
@@ -259,111 +260,112 @@ def render_main() -> None:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Results Overview Card - wrap in HTML container with inline styles
-    st.markdown(
-        '<div class="section-card" id="results-overview-card" style="background-color: #ffffff; padding: 2rem 2.5rem; border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08); border: 2px solid #c0c0c0; margin: 1.5rem 0 2rem 0;">',
-        unsafe_allow_html=True
-    )
-    st.markdown("### Results Overview")
-    st.markdown(
-        '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
-        unsafe_allow_html=True
-    )
+    # Results Overview Card - use container approach
+    with st.container():
+        st.markdown(
+            '<div class="section-card-wrapper" data-section="results-overview">',
+            unsafe_allow_html=True
+        )
+        st.markdown("### Results Overview")
+        st.markdown(
+            '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
+            unsafe_allow_html=True
+        )
 
-    # Show error if any
-    if st.session_state.get("error_message"):
-        st.error(st.session_state["error_message"])
+        # Show error if any
+        if st.session_state.get("error_message"):
+            st.error(st.session_state["error_message"])
 
-    # Check if we have results first - if yes, show them even if is_generating is True (might be stale)
-    has_results = (
-        st.session_state.get("generation_complete") or 
-        bool(st.session_state.get("hmw_results"))
-    )
-    
-    # Show loading state only if generating AND no results yet
-    if st.session_state.get("is_generating") and not has_results:
-        st.info("Generating ideas... This may take 30-60 seconds. Please be patient.")
-        st.warning("If this takes longer than 2 minutes, click 'Cancel Generation' and try again.")
-        # Show placeholder carousel during loading
-        section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
-        render_loading_carousel(section_names)
+        # Check if we have results first - if yes, show them even if is_generating is True (might be stale)
+        has_results = (
+            st.session_state.get("generation_complete") or 
+            bool(st.session_state.get("hmw_results"))
+        )
+        
+        # Show loading state only if generating AND no results yet
+        if st.session_state.get("is_generating") and not has_results:
+            st.info("Generating ideas... This may take 30-60 seconds. Please be patient.")
+            st.warning("If this takes longer than 2 minutes, click 'Cancel Generation' and try again.")
+            # Show placeholder carousel during loading
+            section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
+            render_loading_carousel(section_names)
+            st.markdown('</div>', unsafe_allow_html=True)
+            return  # Don't show results while loading
+        
+        # Show results with carousel navigation
+        if has_results:
+            # Clear is_generating flag if we have results (might be stale)
+            if st.session_state.get("is_generating"):
+                st.session_state["is_generating"] = False
+            # Navigation for three sections
+            section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
+            current_section = st.session_state.get("current_section", 0)
+            
+            # Prepare preview data for carousel
+            preview_data = {
+                "hmw_results": st.session_state.get("hmw_results", []),
+                "image_urls": st.session_state.get("image_urls", []),
+                "layout_results": st.session_state.get("layout_results", []),
+            }
+            
+            # Render visual carousel with previews
+            new_section = render_visual_carousel(section_names, current_section, "section_nav", preview_data)
+            if new_section != current_section:
+                st.session_state["current_section"] = new_section
+                st.rerun()
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Display current section content - ResearchBridge style structure
+            if current_section == 0:  # HMW Reframes
+                st.markdown('<div class="result-section">', unsafe_allow_html=True)
+                hmw_results = st.session_state.get("hmw_results", [])
+                if hmw_results:
+                    st.markdown('<div class="result-heading">How Might We Statements:</div>', unsafe_allow_html=True)
+                    for i, stmt in enumerate(hmw_results, 1):
+                        st.markdown(f'<div class="result-content"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
+                        if i < len(hmw_results):
+                            st.markdown("<div style='margin: 1.5rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
+                else:
+                    st.info("No reframes generated yet.")
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            elif current_section == 1:  # Concept Sketches
+                st.markdown('<div class="result-section">', unsafe_allow_html=True)
+                st.markdown('<div class="result-heading">Concept Sketches:</div>', unsafe_allow_html=True)
+                image_urls = st.session_state.get("image_urls", [])
+                if image_urls:
+                    for i, url in enumerate(image_urls, 1):
+                        if url:
+                            st.image(url, caption=f"Sketch {i}", width='stretch')
+                            if i < len(image_urls):
+                                st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+                        else:
+                            st.warning(f"Image {i} failed to generate")
+                else:
+                    st.info("Sketches will appear here after generation.")
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            elif current_section == 2:  # Layout Ideas
+                st.markdown('<div class="result-section">', unsafe_allow_html=True)
+                st.markdown('<div class="result-heading">Layout Ideas:</div>', unsafe_allow_html=True)
+                layout_results = st.session_state.get("layout_results", [])
+                if layout_results:
+                    for i, layout in enumerate(layout_results, 1):
+                        title = layout.get("title", f"Layout {i}")
+                        desc = layout.get("description", "")
+                        st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
+                        if i < len(layout_results):
+                            st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
+                else:
+                    st.info("Layout suggestions will appear here after generation.")
+                st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            # Placeholder state
+            st.info("Enter a challenge above and click Generate to see results.")
+        
         st.markdown('</div>', unsafe_allow_html=True)
-        return  # Don't show results while loading
-    
-    # Show results with carousel navigation
-    if has_results:
-        # Clear is_generating flag if we have results (might be stale)
-        if st.session_state.get("is_generating"):
-            st.session_state["is_generating"] = False
-        # Navigation for three sections
-        section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
-        current_section = st.session_state.get("current_section", 0)
-        
-        # Prepare preview data for carousel
-        preview_data = {
-            "hmw_results": st.session_state.get("hmw_results", []),
-            "image_urls": st.session_state.get("image_urls", []),
-            "layout_results": st.session_state.get("layout_results", []),
-        }
-        
-        # Render visual carousel with previews
-        new_section = render_visual_carousel(section_names, current_section, "section_nav", preview_data)
-        if new_section != current_section:
-            st.session_state["current_section"] = new_section
-            st.rerun()
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Display current section content - ResearchBridge style structure
-        if current_section == 0:  # HMW Reframes
-            st.markdown('<div class="result-section">', unsafe_allow_html=True)
-            hmw_results = st.session_state.get("hmw_results", [])
-            if hmw_results:
-                st.markdown('<div class="result-heading">How Might We Statements:</div>', unsafe_allow_html=True)
-                for i, stmt in enumerate(hmw_results, 1):
-                    st.markdown(f'<div class="result-content"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
-                    if i < len(hmw_results):
-                        st.markdown("<div style='margin: 1.5rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
-            else:
-                st.info("No reframes generated yet.")
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        elif current_section == 1:  # Concept Sketches
-            st.markdown('<div class="result-section">', unsafe_allow_html=True)
-            st.markdown('<div class="result-heading">Concept Sketches:</div>', unsafe_allow_html=True)
-            image_urls = st.session_state.get("image_urls", [])
-            if image_urls:
-                for i, url in enumerate(image_urls, 1):
-                    if url:
-                        st.image(url, caption=f"Sketch {i}", width='stretch')
-                        if i < len(image_urls):
-                            st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
-                    else:
-                        st.warning(f"Image {i} failed to generate")
-            else:
-                st.info("Sketches will appear here after generation.")
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        elif current_section == 2:  # Layout Ideas
-            st.markdown('<div class="result-section">', unsafe_allow_html=True)
-            st.markdown('<div class="result-heading">Layout Ideas:</div>', unsafe_allow_html=True)
-            layout_results = st.session_state.get("layout_results", [])
-            if layout_results:
-                for i, layout in enumerate(layout_results, 1):
-                    title = layout.get("title", f"Layout {i}")
-                    desc = layout.get("description", "")
-                    st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
-                    if i < len(layout_results):
-                        st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
-            else:
-                st.info("Layout suggestions will appear here after generation.")
-            st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        # Placeholder state
-        st.info("Enter a challenge above and click Generate to see results.")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def inject_custom_css() -> None:
@@ -471,50 +473,30 @@ h4, .stMarkdown h4 {{
     margin-bottom: 1.5rem !important;
 }}
 
-/* Section cards - ResearchBridge style - very visible cards */
-div.section-card,
-.section-card,
-[class*="section-card"] {{
+/* Section card wrappers - style the container and its contents */
+.section-card-wrapper {{
     background-color: #ffffff !important;
     padding: 2rem 2.5rem !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
     border: 2px solid #c0c0c0 !important;
     margin: 1.5rem 0 2rem 0 !important;
-    overflow: visible !important;
-    position: relative !important;
     display: block !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    min-height: 100px !important;
+    position: relative !important;
 }}
 
-/* Target by ID as well */
-#design-challenge-card,
-#results-overview-card {{
-    background-color: #ffffff !important;
-    padding: 2rem 2.5rem !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-    border: 2px solid #c0c0c0 !important;
-    margin: 1.5rem 0 2rem 0 !important;
-    display: block !important;
-    width: 100% !important;
+/* Style Streamlit containers inside card wrappers */
+.section-card-wrapper .element-container,
+.section-card-wrapper [data-testid] {{
+    margin-bottom: 1rem !important;
 }}
 
-.section-card h3,
-#design-challenge-card h3,
-#results-overview-card h3,
-.section-card .stMarkdown h3 {{
+.section-card-wrapper h3,
+.section-card-wrapper .stMarkdown h3 {{
     margin-top: 0 !important;
     padding-top: 0 !important;
-}}
-
-/* Ensure Streamlit elements inside cards are properly styled */
-.section-card .element-container,
-#design-challenge-card ~ .element-container,
-#results-overview-card ~ .element-container {{
-    margin-bottom: 1rem !important;
 }}
 
 /* Primary buttons - blue with depth and shadows */
@@ -619,17 +601,18 @@ label {{
     font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
-/* Dividers - hidden since we use cards */
-hr, .stMarkdown hr {{
+/* Remove ALL dividers completely */
+hr, 
+.stMarkdown hr,
+[data-testid="stHorizontalBlock"] hr,
+.element-container hr,
+div[data-testid="stHorizontalBlock"] hr {{
     display: none !important;
-}}
-
-/* Hide any dividers between sections since cards provide separation */
-.section-card + hr,
-.section-card + .stMarkdown hr,
-#design-challenge-card + hr,
-#results-overview-card + hr {{
-    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
 }}
 
 /* Info/Warning/Error messages - with depth */
