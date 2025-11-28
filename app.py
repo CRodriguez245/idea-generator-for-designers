@@ -64,44 +64,6 @@ def render_sidebar() -> None:
     """Render sidebar controls and contextual info."""
     # Sidebar hidden - ResearchBridge style has everything at top
     pass
-    # with st.sidebar:
-        st.title("Idea Generator")
-        st.markdown(
-            '<p style="color: #666666; font-size: 0.875rem; line-height: 1.5; margin-top: -0.5rem;">'
-            'Rapid ideation assistant for designers. '
-            'Provide a design challenge to generate reframes, sketches, and layouts.'
-            '</p>',
-            unsafe_allow_html=True
-        )
-        st.markdown("---")
-        st.markdown("#### Session")
-        st.text_input("Name (optional)", key="user_name", placeholder="Name (optional)")
-        st.text_input("Email (optional)", key="user_email", placeholder="Email (optional)")
-        
-        if st.session_state.get("generation_complete"):
-            st.markdown("---")
-            st.markdown("#### Export")
-            export_text = create_export_text(
-                st.session_state["challenge_text"],
-                st.session_state["hmw_results"],
-                st.session_state["layout_results"],
-                st.session_state.get("sketch_prompts"),
-            )
-            st.download_button(
-                "Download Results (TXT)",
-                export_text,
-                file_name="idea_generator_results.txt",
-                mime="text/plain",
-                use_container_width=True
-            )
-        
-        st.markdown("---")
-        st.markdown(
-            '<p style="color: #666666; font-size: 0.8125rem; line-height: 1.5; font-style: italic;">'
-            'Tip: Be specific about your design challenge for better results.'
-            '</p>',
-            unsafe_allow_html=True
-        )
 
 
 async def run_generation(challenge: str) -> None:
