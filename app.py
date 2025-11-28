@@ -343,7 +343,7 @@ def render_main() -> None:
                             if i < len(layouts):
                                 st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(layout_results):
-                            st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>', unsafe_allow_html=True)
+                            st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
             else:
                 st.info("Layout suggestions will appear here after generation.")
             st.markdown('</div>', unsafe_allow_html=True)
