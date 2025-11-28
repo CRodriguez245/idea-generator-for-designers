@@ -107,12 +107,18 @@ async def run_generation(challenge: str) -> None:
         # Persist to database
         store = get_session_store()
         session_id = st.session_state["session_id"]
-        store.create_session(
-            session_id,
-            challenge,
-            st.session_state.get("user_name", ""),
-            st.session_state.get("user_email", ""),
-        )
+        
+        # Check if session exists, create if not
+        existing_session = store.get_session(session_id)
+        if not existing_session:
+            store.create_session(
+                session_id,
+                challenge,
+                st.session_state.get("user_name", ""),
+                st.session_state.get("user_email", ""),
+            )
+        
+        # Update session with results
         store.update_session(
             session_id,
             {
@@ -224,7 +230,7 @@ def render_main() -> None:
             if image_urls:
                 for i, (url, prompt) in enumerate(zip(image_urls, sketch_prompts), 1):
                     if url:
-                        st.image(url, caption=f"Sketch {i}", use_column_width=True)
+                        st.image(url, caption=f"Sketch {i}", use_container_width=True)
                         with st.expander(f"View prompt {i}"):
                             st.code(prompt, language=None)
                     else:
