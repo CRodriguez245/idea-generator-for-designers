@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 from utils.openai_helpers import generate_all
 from utils.session_store import SessionStore
-from utils.ui_helpers import create_export_text, format_hmw_for_display, format_layout_for_display
+from utils.ui_helpers import create_export_text, format_hmw_for_display, format_layout_for_display, render_visual_carousel
 
 # Load environment variables
 load_dotenv()
@@ -47,6 +47,7 @@ def init_session_state() -> None:
         "error_message": "",
         "session_id": None,
         "generation_complete": False,
+        "current_section": 0,  # 0=HMW, 1=Sketches, 2=Layouts
     }
 
     for key, value in defaults.items():
@@ -202,13 +203,24 @@ def render_main() -> None:
         st.info("Generating ideas... This may take 30-60 seconds.")
         st.spinner("Working on it...")
 
-    # Show results
+    # Show results with carousel navigation
     if st.session_state.get("generation_complete") or (
         st.session_state.get("hmw_results") and not st.session_state["is_generating"]
     ):
-        tab1, tab2, tab3 = st.tabs(["HMW Reframes", "Concept Sketches", "Layout Ideas"])
-
-        with tab1:
+        # Navigation for three sections
+        section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
+        current_section = st.session_state.get("current_section", 0)
+        
+        # Render visual carousel
+        new_section = render_visual_carousel(section_names, current_section, "section_nav")
+        if new_section != current_section:
+            st.session_state["current_section"] = new_section
+            st.rerun()
+        
+        st.markdown("---")
+        
+        # Display current section content
+        if current_section == 0:  # HMW Reframes
             st.subheader("HMW Reframes")
             hmw_results = st.session_state.get("hmw_results", [])
             if hmw_results:
@@ -223,8 +235,8 @@ def render_main() -> None:
                     st.code(all_hmw, language=None)
             else:
                 st.info("No reframes generated yet.")
-
-        with tab2:
+        
+        elif current_section == 1:  # Concept Sketches
             st.subheader("Concept Sketches")
             image_urls = st.session_state.get("image_urls", [])
             sketch_prompts = st.session_state.get("sketch_prompts", [])
@@ -240,8 +252,8 @@ def render_main() -> None:
                         st.warning(f"Image {i} failed to generate")
             else:
                 st.info("Sketches will appear here after generation.")
-
-        with tab3:
+        
+        elif current_section == 2:  # Layout Ideas
             st.subheader("Layout Ideas")
             layout_results = st.session_state.get("layout_results", [])
             if layout_results:
@@ -258,16 +270,7 @@ def render_main() -> None:
                 st.info("Layout suggestions will appear here after generation.")
     else:
         # Placeholder state
-        tab1, tab2, tab3 = st.tabs(["HMW Reframes", "Concept Sketches", "Layout Ideas"])
-        with tab1:
-            st.subheader("HMW Reframes")
-            st.info("Enter a challenge above and click Generate.")
-        with tab2:
-            st.subheader("Concept Sketches")
-            st.info("DALL·E images will appear here.")
-        with tab3:
-            st.subheader("Layout Ideas")
-            st.info("UI layout suggestions will render here.")
+        st.info("Enter a challenge above and click Generate to see results.")
 
 
 def main() -> None:
