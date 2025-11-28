@@ -198,115 +198,18 @@ def get_preview_content(section_index: int, preview_data: Dict[str, Any] | None)
 
 def render_visual_carousel(section_names: List[str], current_index: int, key_prefix: str, preview_data: Dict[str, Any] | None = None) -> int:
     """
-    Render a visual carousel with cards showing side previews.
+    Render a simple navigation for sections using Streamlit native components.
     
     Args:
         section_names: List of section names
         current_index: Current active section index
         key_prefix: Unique prefix for button keys
-        preview_data: Optional dict with preview content for each section
+        preview_data: Optional dict (not used, kept for compatibility)
     
     Returns:
         Selected index after navigation
     """
-    carousel_html = """
-    <style>
-        .carousel-container {
-            position: relative;
-            width: 100%;
-            max-width: 1200px;
-            margin: 20px auto;
-            perspective: 1000px;
-        }
-        .carousel-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            padding: 20px 0;
-        }
-        .carousel-card {
-            transition: all 0.4s ease;
-            border-radius: 12px;
-            padding: 30px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            color: white;
-            text-align: center;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .carousel-card.prev, .carousel-card.next {
-            opacity: 0.5;
-            transform: scale(0.75) rotateY(25deg);
-            cursor: pointer;
-            filter: blur(1px);
-        }
-        .carousel-card.active {
-            opacity: 1;
-            transform: scale(1);
-            z-index: 2;
-            width: 400px;
-        }
-        .carousel-card.prev {
-            margin-right: -120px;
-            width: 200px;
-        }
-        .carousel-card.next {
-            margin-left: -120px;
-            width: 200px;
-        }
-        .card-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .carousel-card.prev .card-title, .carousel-card.next .card-title {
-            font-size: 16px;
-        }
-        .card-preview {
-            font-size: 12px;
-            margin-top: 10px;
-            opacity: 0.9;
-            line-height: 1.4;
-            max-height: 80px;
-            overflow: hidden;
-        }
-    </style>
-    <div class="carousel-container">
-        <div class="carousel-wrapper">
-    """
-    
-    for i, name in enumerate(section_names):
-        card_class = "carousel-card"
-        if i < current_index:
-            card_class += " prev"
-        elif i > current_index:
-            card_class += " next"
-        else:
-            card_class += " active"
-        
-        preview = get_preview_content(i, preview_data) if preview_data else ""
-        
-        carousel_html += f"""
-            <div class="{card_class}">
-                <div class="card-title">{name}</div>
-                {preview}
-            </div>
-        """
-    
-    carousel_html += """
-        </div>
-    </div>
-    """
-    
-    st.markdown(carousel_html, unsafe_allow_html=True)
-    
-    # Navigation buttons below the carousel
+    # Simple navigation using buttons and indicators
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col1:
@@ -314,15 +217,11 @@ def render_visual_carousel(section_names: List[str], current_index: int, key_pre
             return max(0, current_index - 1)
     
     with col2:
+        # Show current section name
+        st.markdown(f"<div style='text-align: center; padding: 15px; font-size: 18px; font-weight: bold;'>{section_names[current_index]}</div>", unsafe_allow_html=True)
         # Pagination dots
-        dots_html = "<div style='text-align: center; margin-top: 10px;'>"
-        for i in range(len(section_names)):
-            if i == current_index:
-                dots_html += "● "
-            else:
-                dots_html += "○ "
-        dots_html += "</div>"
-        st.markdown(dots_html, unsafe_allow_html=True)
+        dots = " ".join(["●" if i == current_index else "○" for i in range(len(section_names))])
+        st.markdown(f"<div style='text-align: center; margin-top: 5px;'>{dots}</div>", unsafe_allow_html=True)
     
     with col3:
         if st.button("Next ▶", key=f"{key_prefix}_next", disabled=current_index >= len(section_names) - 1):

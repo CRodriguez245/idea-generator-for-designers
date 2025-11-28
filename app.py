@@ -286,7 +286,6 @@ def render_main() -> None:
             if hmw_results:
                 for i, stmt in enumerate(hmw_results, 1):
                     st.markdown(f"**{i}.** {stmt}")
-                    st.code(stmt, language=None)
                     if i < len(hmw_results):
                         st.markdown("---")
                 # Copy all button - using code block for easy selection
