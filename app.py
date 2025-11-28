@@ -476,12 +476,31 @@ div[class*="section-card"] {{
     opacity: 0 !important;
 }}
 
-/* Hide ANY empty div that has shadows/borders/rounded corners - these are the white rectangles */
-div:empty,
-div:not(:has(*)) {{
-    box-shadow: none !important;
+/* Hide ALL empty divs by default - they're the white rectangles */
+div:empty {{
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
     border: none !important;
+    box-shadow: none !important;
     background: transparent !important;
+    opacity: 0 !important;
+}}
+
+/* But allow divs with actual content */
+div:has(*),
+div:has(input),
+div:has(textarea),
+div:has(button),
+div:has(h1),
+div:has(h2),
+div:has(h3),
+div:has(p),
+div:has(img) {{
+    display: block !important;
+    opacity: 1 !important;
 }}
 
 /* Specifically target and hide empty divs with card-like styling */
