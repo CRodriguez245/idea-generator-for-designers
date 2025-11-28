@@ -12,6 +12,7 @@ Main app that orchestrates:
 from __future__ import annotations
 
 import asyncio
+import base64
 import uuid
 from pathlib import Path
 
@@ -325,19 +326,36 @@ def render_main() -> None:
 
 def inject_custom_css() -> None:
     """Inject custom CSS for fonts and styling."""
-    css = """
+    # Check if local font file exists
+    font_path = Path(__file__).parent / "assets" / "fonts" / "NuosuSIL-Regular.ttf"
+    font_url = ""
+    if font_path.exists():
+        # Use local font file
+        font_url = f"""
+        @font-face {{
+            font-family: 'Nuosu SIL';
+            src: url('data:font/truetype;charset=utf-8;base64,{_encode_font_file(font_path)}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }}
+        """
+    else:
+        # Fallback to web font
+        font_url = "@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Yi:wght@400;600;700&display=swap');"
+    
+    css = f"""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Yi:wght@400;600;700&display=swap');
+        {font_url}
         
-        /* Apply Nuosu SIL font to headers - using Noto Serif Yi as web-available alternative */
+        /* Apply Nuosu SIL font to headers */
         h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stSubheader {
-            font-family: 'Noto Serif Yi', 'Nuosu SIL', 'Times New Roman', serif !important;
+            font-family: 'Nuosu SIL', 'Noto Serif Yi', 'Times New Roman', serif !important;
             color: #000000 !important;
             font-weight: 600 !important;
         }
         
         /* Apply Helvetica to body text */
-        body, .stMarkdown, .stText, .stTextInput, .stTextArea, .stButton, p, div, span {
+        body, .stMarkdown, .stText, .stTextInput, .stTextArea, p, div, span, label {
             font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
             color: #000000 !important;
         }
@@ -354,19 +372,32 @@ def inject_custom_css() -> None:
         }
         
         /* Style sidebar */
-        .css-1d391kg {
+        .css-1d391kg, [data-testid="stSidebar"] {
             background-color: #f8f9fa !important;
         }
         
-        /* Style buttons */
+        /* Style buttons - make them readable with white text on black */
         .stButton > button {
             background-color: #000000 !important;
             color: #ffffff !important;
-            border: 1px solid #000000 !important;
+            border: 2px solid #000000 !important;
+            font-weight: 500 !important;
+            padding: 0.5rem 1.5rem !important;
+            border-radius: 4px !important;
+            transition: all 0.2s ease !important;
         }
         
         .stButton > button:hover {
             background-color: #333333 !important;
+            border-color: #333333 !important;
+            color: #ffffff !important;
+        }
+        
+        .stButton > button:disabled {
+            background-color: #cccccc !important;
+            color: #666666 !important;
+            border-color: #cccccc !important;
+            cursor: not-allowed !important;
         }
         
         /* Style text inputs */
@@ -375,9 +406,20 @@ def inject_custom_css() -> None:
             color: #000000 !important;
             border: 1px solid #cccccc !important;
         }
+        
+        .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
+            border-color: #000000 !important;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1) !important;
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+
+
+def _encode_font_file(font_path: Path) -> str:
+    """Encode font file to base64 for embedding in CSS."""
+    with open(font_path, 'rb') as f:
+        return base64.b64encode(f.read()).decode('utf-8')
 
 
 def main() -> None:
