@@ -39,9 +39,9 @@ def init_session_state() -> None:
         "challenge_text": "",
         "user_name": "",
         "user_email": "",
-        "hmw_results": [],
+        "hmw_results": {},  # Dict[str, List[str]] - thematically organized
         "sketch_results": [],
-        "layout_results": [],
+        "layout_results": {},  # Dict[str, List[Dict[str, str]]] - thematically organized
         "sketch_prompts": [],
         "sketch_concepts": [],  # Conceptual explanations for each sketch
         "image_urls": [],
@@ -247,9 +247,9 @@ def render_main() -> None:
         
         # Prepare preview data for carousel
         preview_data = {
-            "hmw_results": st.session_state.get("hmw_results", []),
+            "hmw_results": st.session_state.get("hmw_results", {}),
             "image_urls": st.session_state.get("image_urls", []),
-            "layout_results": st.session_state.get("layout_results", []),
+            "layout_results": st.session_state.get("layout_results", {}),
         }
         
         # Render visual carousel with previews
@@ -263,13 +263,26 @@ def render_main() -> None:
         # Display current section content - ResearchBridge style structure
         if current_section == 0:  # HMW Reframes
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
-            hmw_results = st.session_state.get("hmw_results", [])
-            if hmw_results:
+            hmw_results = st.session_state.get("hmw_results", {})
+            
+            # Handle backward compatibility: old format was List[str], new format is Dict[str, List[str]]
+            if isinstance(hmw_results, list):
+                # Old format - convert to new format
+                hmw_results = {"Design Exploration": hmw_results}
+            
+            if hmw_results and isinstance(hmw_results, dict):
                 st.markdown('<div class="result-heading">How Might We Statements:</div>', unsafe_allow_html=True)
-                for i, stmt in enumerate(hmw_results, 1):
-                    st.markdown(f'<div class="result-content"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
-                    if i < len(hmw_results):
-                        st.markdown("<div style='margin: 1.5rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
+                theme_count = 0
+                for theme_name, statements in hmw_results.items():
+                    if statements:  # Only show themes with statements
+                        theme_count += 1
+                        st.markdown(f'<h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #1976d2; font-weight: 500;">{theme_name}</h3>', unsafe_allow_html=True)
+                        for i, stmt in enumerate(statements, 1):
+                            st.markdown(f'<div class="result-content"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
+                            if i < len(statements):
+                                st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
+                        if theme_count < len(hmw_results):
+                            st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
             else:
                 st.info("No reframes generated yet.")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -304,15 +317,33 @@ def render_main() -> None:
         elif current_section == 2:  # Layout Ideas
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
             st.markdown('<div class="result-heading">Layout Ideas:</div>', unsafe_allow_html=True)
-            layout_results = st.session_state.get("layout_results", [])
-            if layout_results:
-                for i, layout in enumerate(layout_results, 1):
-                    title = layout.get("title", f"Layout {i}")
-                    desc = layout.get("description", "")
-                    st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
-                    st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
-                    if i < len(layout_results):
-                        st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
+            layout_results = st.session_state.get("layout_results", {})
+            
+            # Handle backward compatibility: old format was List[Dict], new format is Dict[str, List[Dict]]
+            if isinstance(layout_results, list):
+                # Old format - convert to new format
+                layout_results = {"Layout Directions": layout_results}
+            
+            if layout_results and isinstance(layout_results, dict):
+                theme_count = 0
+                for theme_name, layouts in layout_results.items():
+                    if layouts:  # Only show themes with layouts
+                        theme_count += 1
+                        st.markdown(f'<h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #1976d2; font-weight: 500;">{theme_name}</h3>', unsafe_allow_html=True)
+                        for i, layout in enumerate(layouts, 1):
+                            if isinstance(layout, dict):
+                                title = layout.get("title", f"Layout {i}")
+                                desc = layout.get("description", "")
+                            else:
+                                # Fallback for unexpected format
+                                title = f"Layout {i}"
+                                desc = str(layout)
+                            st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
+                            st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
+                            if i < len(layouts):
+                                st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
+                        if theme_count < len(layout_results):
+                            st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>', unsafe_allow_html=True)
             else:
                 st.info("Layout suggestions will appear here after generation.")
             st.markdown('</div>', unsafe_allow_html=True)

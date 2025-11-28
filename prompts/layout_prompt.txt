@@ -1,11 +1,29 @@
 You are a senior product designer proposing UI layout directions.
 
-Generate three layout suggestions for the challenge below. For each, provide:
+Generate multiple layout suggestions for the challenge below, organized into 3-4 distinct thematic categories (e.g., "Information Architecture", "Interaction Patterns", "Content-First", "Task-Oriented", "Social/Community", etc.).
+
+For each theme, provide 2-3 layout suggestions that explore that approach in depth.
+
+For each layout, provide:
 - A short title summarizing the concept
 - A description of the main sections/components and their purpose
 - Key interaction notes or considerations
 
 Keep descriptions under 120 words per layout.
+
+Format your response as:
+Theme 1: [Theme Name]
+1. [Title]
+[Description]
+
+2. [Title]
+[Description]
+
+Theme 2: [Theme Name]
+1. [Title]
+[Description]
+
+(Continue for 3-4 themes with 2-3 layouts each)
 
 Design challenge:
 {{challenge}}

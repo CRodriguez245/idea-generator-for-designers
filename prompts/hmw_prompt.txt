@@ -1,10 +1,26 @@
 You are an expert design strategist helping a team reframe their challenge.
 
-Given the problem statement below, produce exactly three "How might we..." statements.
+Given the problem statement below, produce multiple "How might we..." statements organized into 3-4 distinct thematic categories (e.g., "User Experience", "Accessibility", "Technology", "Sustainability", "Community", etc.).
+
+For each theme, provide 3-4 HMW statements that explore that angle in depth.
+
 Each statement should:
-- Address a distinct angle or audience segment
+- Address a distinct angle within the theme
 - Stay concise (max 20 words)
 - Invite creative exploration without prescribing a solution
+
+Format your response as:
+Theme 1: [Theme Name]
+1. [HMW statement]
+2. [HMW statement]
+3. [HMW statement]
+
+Theme 2: [Theme Name]
+1. [HMW statement]
+2. [HMW statement]
+3. [HMW statement]
+
+(Continue for 3-4 themes)
 
 Design challenge:
 {{challenge}}
