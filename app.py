@@ -471,14 +471,14 @@ h4, .stMarkdown h4 {{
     margin-bottom: 1.5rem !important;
 }}
 
-/* Section cards - ResearchBridge style with clear borders */
+/* Section cards - ResearchBridge style - direct styling */
 .section-card {{
     background-color: #ffffff !important;
-    padding: 2rem !important;
+    padding: 2rem 2.5rem !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05) !important;
-    border: 1px solid #d0d0d0 !important;
-    margin: 1rem 0 2rem 0 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    border: 1.5px solid #d0d0d0 !important;
+    margin: 1.5rem 0 2rem 0 !important;
     overflow: visible !important;
     position: relative !important;
     display: block !important;
@@ -486,46 +486,30 @@ h4, .stMarkdown h4 {{
     box-sizing: border-box !important;
 }}
 
-/* Target all Streamlit elements within section cards */
-.section-card ~ *,
-.section-card .element-container,
-.section-card .stTextArea,
-.section-card .stButton,
-.section-card > div {{
-    position: relative !important;
-    z-index: 1 !important;
+/* Style the section card container and all its contents */
+#design-challenge-card,
+#results-overview-card {{
+    background-color: #ffffff !important;
+    padding: 2rem 2.5rem !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    border: 1.5px solid #d0d0d0 !important;
+    margin: 1.5rem 0 2rem 0 !important;
 }}
 
 .section-card h3,
+#design-challenge-card h3,
+#results-overview-card h3,
 .section-card .stMarkdown h3 {{
     margin-top: 0 !important;
     padding-top: 0 !important;
 }}
 
-/* Style all Streamlit widgets and containers within cards */
-#design-challenge-card .element-container,
-#design-challenge-card .stTextArea > div,
-#design-challenge-card .stButton,
-#design-challenge-card .stColumns,
-#results-overview-card .element-container,
-#results-overview-card .stTextArea > div,
-#results-overview-card .stButton,
-#results-overview-card .stColumns {{
+/* Ensure Streamlit elements inside cards are properly styled */
+.section-card .element-container,
+#design-challenge-card ~ .element-container,
+#results-overview-card ~ .element-container {{
     margin-bottom: 1rem !important;
-}}
-
-/* Ensure block containers inside cards don't add extra padding */
-.section-card .block-container {{
-    padding: 0 !important;
-    max-width: 100% !important;
-}}
-
-/* Make sure the section card wraps everything properly */
-.section-card::before,
-.section-card::after {{
-    content: "" !important;
-    display: table !important;
-    clear: both !important;
 }}
 
 /* Primary buttons - blue with depth and shadows */
@@ -630,11 +614,17 @@ label {{
     font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
-/* Dividers - subtle */
+/* Dividers - hidden since we use cards */
 hr, .stMarkdown hr {{
-    border: none !important;
-    border-top: 1px solid #e0e0e0 !important;
-    margin: 2rem 0 !important;
+    display: none !important;
+}}
+
+/* Hide any dividers between sections since cards provide separation */
+.section-card + hr,
+.section-card + .stMarkdown hr,
+#design-challenge-card + hr,
+#results-overview-card + hr {{
+    display: none !important;
 }}
 
 /* Info/Warning/Error messages - with depth */
