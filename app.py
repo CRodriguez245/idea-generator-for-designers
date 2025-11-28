@@ -375,20 +375,21 @@ def inject_custom_css() -> None:
     css = f"""<style>
 {font_declaration}
 
-/* Base typography - clean and readable */
+/* Base typography - Futura and Helvetica */
 body {{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Helvetica', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif !important;
     color: #1a1a1a !important;
     line-height: 1.6 !important;
 }}
 
-/* Headers - clean and structured */
+/* Headers - Futura font family */
 h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
-    font-family: 'Nuosu SIL', 'Noto Serif Yi', 'Times New Roman', serif !important;
+    font-family: 'Futura', 'Futura PT', 'Century Gothic', 'Trebuchet MS', 'Helvetica', Arial, sans-serif !important;
     color: #000000 !important;
     font-weight: 600 !important;
     margin-bottom: 0.5rem !important;
     margin-top: 0 !important;
+    letter-spacing: -0.02em !important;
 }}
 
 h1, .stMarkdown h1 {{
@@ -415,9 +416,9 @@ h4, .stMarkdown h4 {{
     margin-bottom: 0.5rem !important;
 }}
 
-/* Body text */
+/* Body text - Helvetica */
 .stMarkdown, .stText, p, div, span {{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Helvetica', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif !important;
     color: #1a1a1a !important;
     line-height: 1.6 !important;
 }}
@@ -434,12 +435,16 @@ h4, .stMarkdown h4 {{
     padding-top: 2rem !important;
     padding-bottom: 3rem !important;
     max-width: 1000px !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+    border-radius: 8px !important;
+    margin-top: 1rem !important;
 }}
 
-/* Sidebar - light gray like ResearchBridge */
+/* Sidebar - light gray like ResearchBridge with depth */
 [data-testid="stSidebar"] {{
     background-color: #f5f5f5 !important;
     border-right: 1px solid #e0e0e0 !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04) !important;
 }}
 
 [data-testid="stSidebar"] .stMarkdown {{
@@ -454,40 +459,64 @@ h4, .stMarkdown h4 {{
     margin-bottom: 1.5rem !important;
 }}
 
-/* Primary buttons - blue like ResearchBridge */
+/* Primary buttons - blue with depth and shadows */
 .stButton > button[data-baseweb="button"][kind="primary"], 
-.stButton > button:has-text("Generate") {{
+.stButton > button:has-text("Generate"),
+.stButton > button[type="primary"] {{
     background-color: #1976d2 !important;
     color: #ffffff !important;
     border: none !important;
     font-weight: 500 !important;
     padding: 0.625rem 1.5rem !important;
-    border-radius: 4px !important;
+    border-radius: 6px !important;
     transition: all 0.2s ease !important;
     font-size: 0.9375rem !important;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.25), 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+    font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
 .stButton > button[data-baseweb="button"][kind="primary"]:hover,
-.stButton > button:has-text("Generate"):hover {{
+.stButton > button:has-text("Generate"):hover,
+.stButton > button[type="primary"]:hover {{
     background-color: #1565c0 !important;
-    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.35), 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-1px) !important;
 }}
 
-/* Secondary buttons - outline style */
-.stButton > button[kind="secondary"] {{
-    background-color: transparent !important;
+.stButton > button[data-baseweb="button"][kind="primary"]:active,
+.stButton > button:has-text("Generate"):active,
+.stButton > button[type="primary"]:active {{
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 6px rgba(25, 118, 210, 0.25), 0 1px 2px rgba(0, 0, 0, 0.12) !important;
+}}
+
+/* Secondary buttons - outline style with depth */
+.stButton > button[kind="secondary"],
+.stButton > button:not([kind="primary"]):not([type="primary"]) {{
+    background-color: #ffffff !important;
     color: #1976d2 !important;
     border: 1px solid #1976d2 !important;
     font-weight: 500 !important;
     padding: 0.625rem 1.5rem !important;
-    border-radius: 4px !important;
+    border-radius: 6px !important;
     transition: all 0.2s ease !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+    font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
-.stButton > button[kind="secondary"]:hover {{
+.stButton > button[kind="secondary"]:hover,
+.stButton > button:not([kind="primary"]):not([type="primary"]):hover {{
     background-color: #e3f2fd !important;
     border-color: #1565c0 !important;
     color: #1565c0 !important;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-1px) !important;
+}}
+
+.stButton > button[kind="secondary"]:active,
+.stButton > button:not([kind="primary"]):not([type="primary"]):active {{
+    transform: translateY(0) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
 }}
 
 /* Disabled buttons */
@@ -499,20 +528,22 @@ h4, .stMarkdown h4 {{
     opacity: 0.6 !important;
 }}
 
-/* Text inputs - clean borders */
+/* Text inputs - clean borders with depth */
 .stTextInput > div > div > input, .stTextArea > div > div > textarea {{
     background-color: #ffffff !important;
     color: #1a1a1a !important;
     border: 1px solid #bdbdbd !important;
-    border-radius: 4px !important;
+    border-radius: 6px !important;
     padding: 0.75rem 1rem !important;
     font-size: 0.9375rem !important;
     transition: all 0.2s ease !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+    font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
 .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {{
     border-color: #1976d2 !important;
-    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1) !important;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
     outline: none !important;
 }}
 
@@ -536,13 +567,14 @@ hr, .stMarkdown hr {{
     margin: 2rem 0 !important;
 }}
 
-/* Info/Warning/Error messages */
+/* Info/Warning/Error messages - with depth */
 .stInfo {{
     background-color: #e3f2fd !important;
     border-left: 4px solid #1976d2 !important;
     color: #1a1a1a !important;
     padding: 1rem 1.25rem !important;
-    border-radius: 4px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px rgba(25, 118, 210, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }}
 
 .stError {{
@@ -550,7 +582,8 @@ hr, .stMarkdown hr {{
     border-left: 4px solid #d32f2f !important;
     color: #1a1a1a !important;
     padding: 1rem 1.25rem !important;
-    border-radius: 4px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px rgba(211, 47, 47, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }}
 
 .stWarning {{
@@ -558,34 +591,44 @@ hr, .stMarkdown hr {{
     border-left: 4px solid #f57c00 !important;
     color: #1a1a1a !important;
     padding: 1rem 1.25rem !important;
-    border-radius: 4px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px rgba(245, 124, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }}
 
-/* Result sections - structured like ResearchBridge */
+/* Result sections - structured like ResearchBridge with depth */
 .result-section {{
     margin-top: 2rem !important;
     margin-bottom: 2rem !important;
+    background-color: #ffffff !important;
+    padding: 1.5rem !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid #f0f0f0 !important;
 }}
 
 .result-heading {{
     font-size: 1rem !important;
     font-weight: 600 !important;
     color: #000000 !important;
-    margin-top: 1.5rem !important;
+    margin-top: 0 !important;
     margin-bottom: 0.75rem !important;
+    font-family: 'Futura', 'Futura PT', 'Century Gothic', 'Helvetica', Arial, sans-serif !important;
+    letter-spacing: -0.01em !important;
 }}
 
 .result-content {{
     color: #1a1a1a !important;
     line-height: 1.7 !important;
     margin-bottom: 1rem !important;
+    font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
-/* Images */
+/* Images - enhanced depth */
 .stImage > img {{
-    border-radius: 4px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
     margin: 1rem 0 !important;
+    border: 1px solid #f0f0f0 !important;
 }}
 
 .stImage > div {{
