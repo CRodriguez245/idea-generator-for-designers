@@ -476,8 +476,8 @@ div[class*="section-card"] {{
     opacity: 0 !important;
 }}
 
-/* Hide ALL empty divs by default - they're the white rectangles */
-div:empty {{
+/* Hide empty divs but EXCLUDE Streamlit widget containers */
+div:empty:not([class*="st"]):not([data-testid*="st"]) {{
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -489,17 +489,15 @@ div:empty {{
     opacity: 0 !important;
 }}
 
-/* But allow divs with actual content */
-div:has(*),
-div:has(input),
-div:has(textarea),
-div:has(button),
-div:has(h1),
-div:has(h2),
-div:has(h3),
-div:has(p),
-div:has(img) {{
+/* Always show Streamlit widget containers - these contain inputs/textareas */
+.stTextArea,
+.stTextInput,
+.element-container:has(textarea),
+.element-container:has(input),
+[class*="stTextArea"],
+[class*="stTextInput"] {{
     display: block !important;
+    visibility: visible !important;
     opacity: 1 !important;
 }}
 
@@ -678,17 +676,12 @@ div hr,
     clip: rect(0, 0, 0, 0) !important;
 }}
 
-/* Hide empty white rectangle dividers/containers - aggressive targeting */
-.element-container:empty,
+/* Hide empty white rectangle dividers/containers - but NOT widget containers */
 [data-testid="stHorizontalBlock"]:empty,
 div[class*="empty"]:empty,
-.stTextInput:empty,
-.stTextArea:empty,
-input[type="text"]:not([value]),
-input[type="text"][value=""],
-textarea:empty,
-div[class*="element-container"]:empty,
-div[data-testid]:empty {{
+input[type="text"]:not([value]):not(:focus),
+input[type="text"][value=""]:not(:focus),
+div[data-testid]:empty:not([class*="st"]) {{
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -699,12 +692,24 @@ div[data-testid]:empty {{
     box-shadow: none !important;
 }}
 
+/* DO NOT hide Streamlit widget containers even if they appear empty */
+.stTextInput,
+.stTextArea,
+.element-container:has(textarea),
+.element-container:has(input),
+[class*="stTextArea"],
+[class*="stTextInput"] {{
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+}}
+
 /* Hide any Streamlit default spacing/padding elements that appear as white rectangles */
-[class*="stTextInput"]:not(:has(input)),
-[class*="stTextArea"]:not(:has(textarea)),
-div[style*="white"]:empty,
-div[style*="background"]:empty,
-div[class*="block-container"]:empty {{
+/* BUT preserve widget containers */
+div[style*="white"]:empty:not([class*="st"]):not([data-testid*="st"]),
+div[style*="background"]:empty:not([class*="st"]):not([data-testid*="st"]),
+div[class*="block-container"]:empty:not(:has(.stTextArea)):not(:has(.stTextInput)) {{
     display: none !important;
 }}
 
