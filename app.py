@@ -351,7 +351,7 @@ def inject_custom_css() -> None:
 h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stSubheader {{
     font-family: 'Nuosu SIL', 'Noto Serif Yi', 'Times New Roman', serif !important;
     color: #000000 !important;
-    font-weight: 600 !important;
+    font-weight: 400 !important;
 }}
 
 /* Apply Helvetica to body text */
