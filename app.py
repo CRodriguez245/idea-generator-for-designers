@@ -61,7 +61,7 @@ def init_session_state() -> None:
 def render_sidebar() -> None:
     """Render sidebar controls and contextual info."""
     with st.sidebar:
-        st.title("💡 Idea Generator")
+        st.title("Idea Generator")
         st.caption(
             "Rapid ideation assistant for designers. "
             "Provide a design challenge to generate reframes, sketches, and layouts."
@@ -81,14 +81,14 @@ def render_sidebar() -> None:
                 st.session_state.get("sketch_prompts"),
             )
             st.download_button(
-                "📥 Download Results (TXT)",
+                "Download Results (TXT)",
                 export_text,
                 file_name="idea_generator_results.txt",
                 mime="text/plain",
             )
         
         st.markdown("---")
-        st.caption("💡 Tip: Be specific about your design challenge for better results.")
+        st.caption("Tip: Be specific about your design challenge for better results.")
 
 
 async def run_generation(challenge: str) -> None:
@@ -132,21 +132,21 @@ async def run_generation(challenge: str) -> None:
         error_msg = str(e)
         if "rate limit" in error_msg.lower() or "429" in error_msg:
             st.session_state["error_message"] = (
-                "⏳ Rate limit reached. Please wait a moment and try again."
+                "Rate limit reached. Please wait a moment and try again."
             )
         elif "OPENAI_API_KEY" in error_msg:
             st.session_state["error_message"] = (
-                "🔑 API key not configured. Please set OPENAI_API_KEY in your .env file."
+                "API key not configured. Please set OPENAI_API_KEY in your .env file."
             )
         else:
-            st.session_state["error_message"] = f"❌ Error: {error_msg}"
+            st.session_state["error_message"] = f"Error: {error_msg}"
         st.session_state["is_generating"] = False
         st.session_state["generation_complete"] = False
 
 
 def render_main() -> None:
     """Render the main UI layout."""
-    st.title("💡 Idea Generator for Designers")
+    st.title("Idea Generator for Designers")
     st.write("Turn a single design challenge into reframes, sketches, and layouts — in seconds.")
 
     st.markdown("### 1. Design Challenge")
@@ -160,12 +160,12 @@ def render_main() -> None:
     col_submit, col_reset = st.columns([2, 1], gap="small")
     with col_submit:
         generate_clicked = st.button(
-            "🚀 Generate Concepts",
+            "Generate Concepts",
             type="primary",
             disabled=st.session_state["is_generating"] or not challenge.strip(),
         )
     with col_reset:
-        if st.button("🔄 Reset"):
+        if st.button("Reset"):
             for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete"]:
                 st.session_state[key] = [] if isinstance(st.session_state.get(key), list) else False
             st.session_state["challenge_text"] = ""
@@ -185,7 +185,7 @@ def render_main() -> None:
             loop.run_until_complete(run_generation(challenge))
             loop.close()
         except Exception as e:
-            st.session_state["error_message"] = f"❌ Generation failed: {str(e)}"
+            st.session_state["error_message"] = f"Generation failed: {str(e)}"
         finally:
             st.session_state["is_generating"] = False
             st.rerun()
@@ -199,7 +199,7 @@ def render_main() -> None:
 
     # Show loading state
     if st.session_state["is_generating"]:
-        st.info("🔄 Generating ideas... This may take 30-60 seconds.")
+        st.info("Generating ideas... This may take 30-60 seconds.")
         st.spinner("Working on it...")
 
     # Show results
@@ -209,7 +209,7 @@ def render_main() -> None:
         col_hmw, col_sketch, col_layout = st.columns(3, gap="large")
 
         with col_hmw:
-            st.subheader("✳️ HMW Reframes")
+            st.subheader("HMW Reframes")
             hmw_results = st.session_state.get("hmw_results", [])
             if hmw_results:
                 for i, stmt in enumerate(hmw_results, 1):
@@ -218,19 +218,19 @@ def render_main() -> None:
                         st.code(stmt, language=None)
                 # Copy all button - using code block for easy selection
                 all_hmw = "\n".join(f"{i+1}. {stmt}" for i, stmt in enumerate(hmw_results))
-                with st.expander("📋 Copy All HMW Statements"):
+                with st.expander("Copy All HMW Statements"):
                     st.code(all_hmw, language=None)
             else:
                 st.info("No reframes generated yet.")
 
         with col_sketch:
-            st.subheader("🎨 Concept Sketches")
+            st.subheader("Concept Sketches")
             image_urls = st.session_state.get("image_urls", [])
             sketch_prompts = st.session_state.get("sketch_prompts", [])
             if image_urls:
                 for i, (url, prompt) in enumerate(zip(image_urls, sketch_prompts), 1):
                     if url:
-                        st.image(url, caption=f"Sketch {i}", use_container_width=True)
+                        st.image(url, caption=f"Sketch {i}", width='stretch')
                         with st.expander(f"View prompt {i}"):
                             st.code(prompt, language=None)
                     else:
@@ -239,7 +239,7 @@ def render_main() -> None:
                 st.info("Sketches will appear here after generation.")
 
         with col_layout:
-            st.subheader("🧩 Layout Ideas")
+            st.subheader("Layout Ideas")
             layout_results = st.session_state.get("layout_results", [])
             if layout_results:
                 for i, layout in enumerate(layout_results, 1):
@@ -255,13 +255,13 @@ def render_main() -> None:
         # Placeholder state
         col_hmw, col_sketch, col_layout = st.columns(3, gap="large")
         with col_hmw:
-            st.subheader("✳️ HMW Reframes")
+            st.subheader("HMW Reframes")
             st.info("Enter a challenge above and click Generate.")
         with col_sketch:
-            st.subheader("🎨 Concept Sketches")
+            st.subheader("Concept Sketches")
             st.info("DALL·E images will appear here.")
         with col_layout:
-            st.subheader("🧩 Layout Ideas")
+            st.subheader("Layout Ideas")
             st.info("UI layout suggestions will render here.")
 
 
