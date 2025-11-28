@@ -328,91 +328,90 @@ def inject_custom_css() -> None:
     """Inject custom CSS for fonts and styling."""
     # Check if local font file exists
     font_path = Path(__file__).parent / "assets" / "fonts" / "NuosuSIL-Regular.ttf"
-    font_url = ""
+    
+    # Build font declaration
     if font_path.exists():
-        # Use local font file
-        font_url = f"""
-        @font-face {{
-            font-family: 'Nuosu SIL';
-            src: url('data:font/truetype;charset=utf-8;base64,{_encode_font_file(font_path)}') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }}
-        """
+        # Use local font file - encode to base64
+        encoded_font = _encode_font_file(font_path)
+        font_declaration = f"""@font-face {{
+    font-family: 'Nuosu SIL';
+    src: url('data:font/truetype;charset=utf-8;base64,{encoded_font}') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}}"""
     else:
         # Fallback to web font
-        font_url = "@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Yi:wght@400;600;700&display=swap');"
+        font_declaration = "@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Yi:wght@400;600;700&display=swap');"
     
-    css = f"""
-    <style>
-        {font_url}
-        
-        /* Apply Nuosu SIL font to headers */
-        h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stSubheader {
-            font-family: 'Nuosu SIL', 'Noto Serif Yi', 'Times New Roman', serif !important;
-            color: #000000 !important;
-            font-weight: 600 !important;
-        }
-        
-        /* Apply Helvetica to body text */
-        body, .stMarkdown, .stText, .stTextInput, .stTextArea, p, div, span, label {
-            font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
-            color: #000000 !important;
-        }
-        
-        /* Ensure white background */
-        .stApp {
-            background-color: #ffffff !important;
-        }
-        
-        /* Style main content area */
-        .main .block-container {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-        }
-        
-        /* Style sidebar */
-        .css-1d391kg, [data-testid="stSidebar"] {
-            background-color: #f8f9fa !important;
-        }
-        
-        /* Style buttons - make them readable with white text on black */
-        .stButton > button {
-            background-color: #000000 !important;
-            color: #ffffff !important;
-            border: 2px solid #000000 !important;
-            font-weight: 500 !important;
-            padding: 0.5rem 1.5rem !important;
-            border-radius: 4px !important;
-            transition: all 0.2s ease !important;
-        }
-        
-        .stButton > button:hover {
-            background-color: #333333 !important;
-            border-color: #333333 !important;
-            color: #ffffff !important;
-        }
-        
-        .stButton > button:disabled {
-            background-color: #cccccc !important;
-            color: #666666 !important;
-            border-color: #cccccc !important;
-            cursor: not-allowed !important;
-        }
-        
-        /* Style text inputs */
-        .stTextInput > div > div > input, .stTextArea > div > div > textarea {
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            border: 1px solid #cccccc !important;
-        }
-        
-        .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
-            border-color: #000000 !important;
-            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1) !important;
-        }
-    </style>
-    """
+    # Build CSS string - use regular string concatenation to avoid f-string issues
+    css = f"""<style>
+{font_declaration}
+
+/* Apply Nuosu SIL font to headers */
+h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stSubheader {{
+    font-family: 'Nuosu SIL', 'Noto Serif Yi', 'Times New Roman', serif !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+}}
+
+/* Apply Helvetica to body text */
+body, .stMarkdown, .stText, .stTextInput, .stTextArea, p, div, span, label {{
+    font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
+    color: #000000 !important;
+}}
+
+/* Ensure white background */
+.stApp {{
+    background-color: #ffffff !important;
+}}
+
+/* Style main content area */
+.main .block-container {{
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}}
+
+/* Style sidebar */
+.css-1d391kg, [data-testid="stSidebar"] {{
+    background-color: #f8f9fa !important;
+}}
+
+/* Style buttons - make them readable with white text on black */
+.stButton > button {{
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #000000 !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.5rem !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+}}
+
+.stButton > button:hover {{
+    background-color: #333333 !important;
+    border-color: #333333 !important;
+    color: #ffffff !important;
+}}
+
+.stButton > button:disabled {{
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    border-color: #cccccc !important;
+    cursor: not-allowed !important;
+}}
+
+/* Style text inputs */
+.stTextInput > div > div > input, .stTextArea > div > div > textarea {{
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #cccccc !important;
+}}
+
+.stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {{
+    border-color: #000000 !important;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1) !important;
+}}
+</style>"""
     st.markdown(css, unsafe_allow_html=True)
 
 
