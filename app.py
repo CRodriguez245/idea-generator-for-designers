@@ -276,12 +276,20 @@ def render_main() -> None:
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
             st.markdown('<div class="result-heading">Concept Sketches:</div>', unsafe_allow_html=True)
             image_urls = st.session_state.get("image_urls", [])
+            sketch_prompts = st.session_state.get("sketch_prompts", [])
             if image_urls:
                 for i, url in enumerate(image_urls, 1):
                     if url:
-                        st.image(url, caption=f"Sketch {i}", width='stretch')
+                        # Display smaller image
+                        st.image(url, width=400)
+                        # Display explanation text below the image
+                        if i <= len(sketch_prompts) and sketch_prompts[i - 1]:
+                            st.markdown(
+                                f'<p style="margin-top: 0.75rem; margin-bottom: 1.5rem; color: #666666; font-size: 0.9375rem; line-height: 1.6;">{sketch_prompts[i - 1]}</p>',
+                                unsafe_allow_html=True
+                            )
                         if i < len(image_urls):
-                            st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+                            st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
                     else:
                         st.warning(f"Image {i} failed to generate")
             else:
