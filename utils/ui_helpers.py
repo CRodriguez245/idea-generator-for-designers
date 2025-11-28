@@ -210,7 +210,7 @@ def render_visual_carousel(section_names: List[str], current_index: int, key_pre
         Selected index after navigation
     """
     # Simple navigation using buttons and indicators
-    col1, col2, col3 = st.columns([1, 2, 1], gap="small")
+    col1, col2, col3 = st.columns([1, 2, 1])
     
     with col1:
         if st.button("◀ Previous", key=f"{key_prefix}_prev", disabled=current_index == 0):
@@ -218,21 +218,10 @@ def render_visual_carousel(section_names: List[str], current_index: int, key_pre
     
     with col2:
         # Show current section name
-        st.markdown(
-            f"<div style='text-align: center; padding: 20px 10px; font-size: 1.125rem; font-weight: 400; color: #1a1a1a; letter-spacing: -0.01em;'>"
-            f"{section_names[current_index]}"
-            f"</div>",
-            unsafe_allow_html=True
-        )
-        # Pagination dots - subtle styling
-        dots_html = "<div style='text-align: center; margin-top: 8px;'>"
-        for i in range(len(section_names)):
-            if i == current_index:
-                dots_html += "<span style='color: #000000; font-size: 12px; margin: 0 4px;'>●</span>"
-            else:
-                dots_html += "<span style='color: #cccccc; font-size: 12px; margin: 0 4px;'>○</span>"
-        dots_html += "</div>"
-        st.markdown(dots_html, unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; padding: 15px; font-size: 18px; font-weight: bold;'>{section_names[current_index]}</div>", unsafe_allow_html=True)
+        # Pagination dots
+        dots = " ".join(["●" if i == current_index else "○" for i in range(len(section_names))])
+        st.markdown(f"<div style='text-align: center; margin-top: 5px;'>{dots}</div>", unsafe_allow_html=True)
     
     with col3:
         if st.button("Next ▶", key=f"{key_prefix}_next", disabled=current_index >= len(section_names) - 1):
