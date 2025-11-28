@@ -299,13 +299,10 @@ def render_main() -> None:
         elif current_section == 1:  # Concept Sketches
             st.subheader("Concept Sketches")
             image_urls = st.session_state.get("image_urls", [])
-            sketch_prompts = st.session_state.get("sketch_prompts", [])
             if image_urls:
-                for i, (url, prompt) in enumerate(zip(image_urls, sketch_prompts), 1):
+                for i, url in enumerate(image_urls, 1):
                     if url:
                         st.image(url, caption=f"Sketch {i}", width='stretch')
-                        with st.expander(f"View prompt {i}"):
-                            st.code(prompt, language=None)
                         if i < len(image_urls):
                             st.markdown("---")
                     else:
@@ -322,8 +319,6 @@ def render_main() -> None:
                     desc = layout.get("description", "")
                     st.markdown(f"**{i}. {title}**")
                     st.write(desc)
-                    with st.expander(f"View full description {i}"):
-                        st.code(desc, language=None)
                     if i < len(layout_results):
                         st.markdown("---")
             else:

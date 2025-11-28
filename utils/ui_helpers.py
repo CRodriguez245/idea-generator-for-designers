@@ -191,27 +191,8 @@ def render_loading_carousel(section_names: List[str]) -> None:
 
 
 def get_preview_content(section_index: int, preview_data: Dict[str, Any] | None) -> str:
-    """Get preview content for a section."""
-    if not preview_data:
-        return ""
-    
-    if section_index == 0:  # HMW
-        hmw = preview_data.get("hmw_results", [])
-        if hmw and len(hmw) > 0:
-            preview = hmw[0][:60] + "..." if len(hmw[0]) > 60 else hmw[0]
-            return f'<div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">{preview}</div>'
-    
-    elif section_index == 1:  # Sketches
-        image_urls = preview_data.get("image_urls", [])
-        if image_urls and len(image_urls) > 0 and image_urls[0]:
-            return '<div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">3 sketches ready</div>'
-    
-    elif section_index == 2:  # Layouts
-        layouts = preview_data.get("layout_results", [])
-        if layouts and len(layouts) > 0:
-            title = layouts[0].get("title", "Layout 1")
-            return f'<div style="font-size: 12px; margin-top: 10px; opacity: 0.9;">{title}</div>'
-    
+    """Get preview content for a section - return empty string to hide previews."""
+    # Return empty string to keep carousel simple without preview text
     return ""
 
 
