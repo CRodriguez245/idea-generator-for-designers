@@ -447,10 +447,9 @@ h4, .stMarkdown h4 {{
 }}
 
 /* Section card wrappers - ResearchBridge style cards */
-/* Style Streamlit containers as section cards - target containers between markers */
-#design-challenge-start ~ .stContainer,
-#design-challenge-start ~ div[data-testid*="stVerticalBlock"],
-#design-challenge-start ~ .element-container {{
+/* Style Streamlit containers as section cards using JavaScript class injection */
+/* This will be handled by JavaScript - CSS here is just for when cards are properly wrapped */
+.section-card-wrapper {{
     background-color: #ffffff !important;
     padding: 2rem 2.5rem !important;
     border-radius: 12px !important;
@@ -458,24 +457,9 @@ h4, .stMarkdown h4 {{
     border: 2px solid #c0c0c0 !important;
     margin: 1.5rem 0 2rem 0 !important;
     position: relative !important;
-}}
-
-/* Hide containers after the end marker */
-#design-challenge-end ~ .stContainer,
-#results-overview-end ~ .stContainer {{
-    /* Don't style these - they're outside the card */
-}}
-
-#results-overview-start ~ .stContainer,
-#results-overview-start ~ div[data-testid*="stVerticalBlock"],
-#results-overview-start ~ .element-container {{
-    background-color: #ffffff !important;
-    padding: 2rem 2.5rem !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-    border: 2px solid #c0c0c0 !important;
-    margin: 1.5rem 0 2rem 0 !important;
-    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }}
 
 /* Hide ALL empty section-card divs and any empty containers with card styling */
@@ -876,20 +860,50 @@ div[data-testid]:not(:has(*)) {{
         }
         
         function removeEmptyCards() {
-            // Remove any empty section-card divs
-            document.querySelectorAll('.section-card, div[id^="card-"]').forEach(function(card) {
-                const hasContent = card.children.length > 0 || (card.textContent && card.textContent.trim().length > 20);
-                if (!hasContent) {
-                    card.style.display = 'none';
-                    card.style.visibility = 'hidden';
-                    card.style.height = '0';
-                    card.style.margin = '0';
-                    card.style.padding = '0';
-                    card.style.border = 'none';
-                    card.style.boxShadow = 'none';
-                    card.remove();
-                }
+            // Remove any empty section-card divs or empty containers with card styling
+            document.querySelectorAll('.section-card, div[id^="card-"], div[class*="section-card"]').forEach(function(card) {
+                card.remove();
             });
+            
+            // Find and style containers between markers as cards
+            const designStart = document.getElementById('design-challenge-start');
+            const designEnd = document.getElementById('design-challenge-end');
+            const resultsStart = document.getElementById('results-overview-start');
+            const resultsEnd = document.getElementById('results-overview-end');
+            
+            function wrapInCard(startMarker, endMarker) {
+                if (!startMarker) return;
+                
+                let current = startMarker.nextSibling;
+                const elementsToWrap = [];
+                
+                while (current && current !== endMarker) {
+                    if (current.nodeType === 1) {
+                        if (current.classList && (
+                            current.classList.contains('element-container') ||
+                            current.classList.contains('stContainer') ||
+                            current.hasAttribute('data-testid')
+                        )) {
+                            elementsToWrap.push(current);
+                        }
+                    }
+                    current = current.nextSibling;
+                }
+                
+                // Create wrapper div for this section
+                if (elementsToWrap.length > 0) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'section-card-wrapper';
+                    
+                    elementsToWrap[0].parentNode.insertBefore(wrapper, elementsToWrap[0]);
+                    elementsToWrap.forEach(function(el) {
+                        wrapper.appendChild(el);
+                    });
+                }
+            }
+            
+            wrapInCard(designStart, designEnd);
+            wrapInCard(resultsStart, resultsEnd);
         }
         
         function init() {
