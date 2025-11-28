@@ -40,3 +40,16 @@ Thumbs.db
 *.temp
 .cache/
 
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+
