@@ -570,10 +570,14 @@ section[data-testid="stSidebar"],
     min-width: 0 !important;
 }}
 
-/* Make main content full width */
+/* Constrain main content width like ResearchBridge - narrow, centered */
 .block-container,
-.main .block-container {{
-    max-width: 100% !important;
+.main .block-container,
+[data-testid="stAppViewContainer"] > .main,
+.stApp > .main {{
+    max-width: 900px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     padding-left: 2rem !important;
     padding-right: 2rem !important;
 }}
