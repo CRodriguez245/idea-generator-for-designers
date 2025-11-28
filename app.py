@@ -106,6 +106,7 @@ async def run_generation(challenge: str) -> None:
         st.session_state["layout_results"] = results["layouts"]
         st.session_state["image_urls"] = [img.get("url") for img in results["images"]]
         st.session_state["generation_complete"] = True
+        st.session_state["is_generating"] = False  # Clear generating flag on success
         st.session_state["error_message"] = ""
         
         # Persist to database
@@ -181,12 +182,12 @@ def render_main() -> None:
     with col_reset:
         if st.button("Reset"):
             # Clear all state including generation flags
-            for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message"]:
-                st.session_state[key] = [] if isinstance(st.session_state.get(key), list) else False
-            st.session_state["challenge_text"] = ""
+            for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message", "current_section"]:
+                if key in st.session_state:
+                    st.session_state[key] = [] if isinstance(st.session_state[key], list) else False
+            # Don't modify challenge_text directly - it's bound to a widget
+            # User can clear it manually or we use a separate reset mechanism
             st.session_state["session_id"] = None
-            st.session_state["current_section"] = 0
-            init_session_state()
             st.rerun()
     
     # Add a force reset button if stuck in generating state
@@ -225,9 +226,10 @@ def render_main() -> None:
                     loop.close()
                 except Exception:
                     pass
-            # Ensure is_generating is always cleared
-            if st.session_state.get("error_message") or not st.session_state.get("generation_complete"):
+            # Ensure is_generating is cleared if generation completed successfully
+            if st.session_state.get("generation_complete"):
                 st.session_state["is_generating"] = False
+            # Always rerun to update UI
             st.rerun()
 
     st.markdown("---")
@@ -238,7 +240,7 @@ def render_main() -> None:
         st.error(st.session_state["error_message"])
 
     # Show loading state with placeholder carousel
-    if st.session_state.get("is_generating"):
+    if st.session_state.get("is_generating") and not st.session_state.get("generation_complete"):
         st.info("Generating ideas... This may take 30-60 seconds. Please be patient.")
         st.warning("If this takes longer than 2 minutes, click 'Cancel Generation' and try again.")
         # Show placeholder carousel during loading
@@ -247,10 +249,13 @@ def render_main() -> None:
         st.markdown("---")
         return  # Don't show results while loading
 
-    # Show results with carousel navigation
-    if st.session_state.get("generation_complete") or (
-        st.session_state.get("hmw_results") and not st.session_state["is_generating"]
-    ):
+    # Show results with carousel navigation (if generation is complete OR we have results and not generating)
+    has_results = (
+        st.session_state.get("generation_complete") or 
+        (st.session_state.get("hmw_results") and not st.session_state.get("is_generating"))
+    )
+    
+    if has_results:
         # Navigation for three sections
         section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
         current_section = st.session_state.get("current_section", 0)
