@@ -386,7 +386,7 @@ body {{
 h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
     font-family: 'Futura', 'Futura PT', 'Century Gothic', 'Trebuchet MS', 'Helvetica', Arial, sans-serif !important;
     color: #000000 !important;
-    font-weight: 600 !important;
+    font-weight: 400 !important;
     margin-bottom: 0.5rem !important;
     margin-top: 0 !important;
     letter-spacing: -0.02em !important;
@@ -411,7 +411,7 @@ h3, .stMarkdown h3 {{
 
 h4, .stMarkdown h4 {{
     font-size: 1.1rem !important;
-    font-weight: 600 !important;
+    font-weight: 400 !important;
     margin-top: 1.25rem !important;
     margin-bottom: 0.5rem !important;
 }}
@@ -609,7 +609,7 @@ hr, .stMarkdown hr {{
 
 .result-heading {{
     font-size: 1rem !important;
-    font-weight: 600 !important;
+    font-weight: 400 !important;
     color: #000000 !important;
     margin-top: 0 !important;
     margin-bottom: 0.75rem !important;
