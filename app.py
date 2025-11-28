@@ -612,7 +612,7 @@ div hr,
     clip: rect(0, 0, 0, 0) !important;
 }}
 
-/* Hide empty white rectangle dividers/containers */
+/* Hide empty white rectangle dividers/containers - aggressive targeting */
 .element-container:empty,
 [data-testid="stHorizontalBlock"]:empty,
 div[class*="empty"]:empty,
@@ -620,20 +620,32 @@ div[class*="empty"]:empty,
 .stTextArea:empty,
 input[type="text"]:not([value]),
 input[type="text"][value=""],
-textarea:empty {{
+textarea:empty,
+div[class*="element-container"]:empty,
+div[data-testid]:empty {{
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     opacity: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
 }}
 
 /* Hide any Streamlit default spacing/padding elements that appear as white rectangles */
 [class*="stTextInput"]:not(:has(input)),
 [class*="stTextArea"]:not(:has(textarea)),
 div[style*="white"]:empty,
-div[style*="background"]:empty {{
+div[style*="background"]:empty,
+div[class*="block-container"]:empty {{
+    display: none !important;
+}}
+
+/* Hide empty containers with shadows/borders that look like dividers */
+.element-container:not(:has(*)),
+div[class*="element-container"]:not(:has(*)),
+div[data-testid]:not(:has(*)) {{
     display: none !important;
 }}
 
@@ -785,9 +797,21 @@ div[style*="background"]:empty {{
                     el.remove();
                 }
             });
-            // Remove empty containers that appear as white rectangles
-            document.querySelectorAll('.element-container:empty, [data-testid="stHorizontalBlock"]:empty').forEach(function(el) {
-                if (!el.querySelector('input') && !el.querySelector('textarea') && !el.querySelector('button')) {
+            // Remove empty containers that appear as white rectangles - very aggressive
+            document.querySelectorAll('.element-container, [data-testid], div[class*="container"], div[class*="block"]').forEach(function(el) {
+                // Check if it's empty or only contains whitespace
+                const hasContent = el.children.length > 0 || el.textContent.trim().length > 0;
+                const hasInputs = el.querySelector('input, textarea, button, img, h1, h2, h3, h4, h5, h6, p, div.section-card');
+                const hasShadow = window.getComputedStyle(el).boxShadow !== 'none';
+                const isCard = el.classList.contains('section-card') || el.id.startsWith('card-');
+                
+                // If it's empty, has shadow (card-like), and is NOT a section card, remove it
+                if (!hasContent && !hasInputs && hasShadow && !isCard) {
+                    el.style.display = 'none';
+                    el.remove();
+                }
+                // Also remove empty element containers between sections
+                if (el.classList.contains('element-container') && !hasContent && !hasInputs && !isCard) {
                     el.style.display = 'none';
                     el.remove();
                 }
