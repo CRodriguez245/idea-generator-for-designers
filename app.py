@@ -177,9 +177,9 @@ def render_main() -> None:
         unsafe_allow_html=True
     )
 
-    # Design Challenge Card - wrap in HTML container
+    # Design Challenge Card - wrap in HTML container with inline styles
     st.markdown(
-        '<div class="section-card" id="design-challenge-card">',
+        '<div class="section-card" id="design-challenge-card" style="background-color: #ffffff; padding: 2rem 2.5rem; border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08); border: 2px solid #c0c0c0; margin: 1.5rem 0 2rem 0;">',
         unsafe_allow_html=True
     )
     st.markdown("### Design Challenge")
@@ -259,9 +259,9 @@ def render_main() -> None:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Results Overview Card - wrap in HTML container
+    # Results Overview Card - wrap in HTML container with inline styles
     st.markdown(
-        '<div class="section-card" id="results-overview-card">',
+        '<div class="section-card" id="results-overview-card" style="background-color: #ffffff; padding: 2rem 2.5rem; border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08); border: 2px solid #c0c0c0; margin: 1.5rem 0 2rem 0;">',
         unsafe_allow_html=True
     )
     st.markdown("### Results Overview")
