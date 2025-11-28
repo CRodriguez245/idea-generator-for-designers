@@ -239,8 +239,14 @@ def render_main() -> None:
     if st.session_state.get("error_message"):
         st.error(st.session_state["error_message"])
 
-    # Show loading state with placeholder carousel
-    if st.session_state.get("is_generating") and not st.session_state.get("generation_complete"):
+    # Check if we have results first - if yes, show them even if is_generating is True (might be stale)
+    has_results = (
+        st.session_state.get("generation_complete") or 
+        bool(st.session_state.get("hmw_results"))
+    )
+    
+    # Show loading state only if generating AND no results yet
+    if st.session_state.get("is_generating") and not has_results:
         st.info("Generating ideas... This may take 30-60 seconds. Please be patient.")
         st.warning("If this takes longer than 2 minutes, click 'Cancel Generation' and try again.")
         # Show placeholder carousel during loading
@@ -248,14 +254,12 @@ def render_main() -> None:
         render_loading_carousel(section_names)
         st.markdown("---")
         return  # Don't show results while loading
-
-    # Show results with carousel navigation (if generation is complete OR we have results and not generating)
-    has_results = (
-        st.session_state.get("generation_complete") or 
-        (st.session_state.get("hmw_results") and not st.session_state.get("is_generating"))
-    )
     
+    # Show results with carousel navigation
     if has_results:
+        # Clear is_generating flag if we have results (might be stale)
+        if st.session_state.get("is_generating"):
+            st.session_state["is_generating"] = False
         # Navigation for three sections
         section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
         current_section = st.session_state.get("current_section", 0)
