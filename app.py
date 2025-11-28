@@ -95,6 +95,9 @@ def render_sidebar() -> None:
 async def run_generation(challenge: str) -> None:
     """Run the full generation pipeline and update session state."""
     try:
+        # Clear any previous errors
+        st.session_state["error_message"] = ""
+        
         results = await generate_all(challenge)
         
         # Update session state
@@ -106,36 +109,45 @@ async def run_generation(challenge: str) -> None:
         st.session_state["error_message"] = ""
         
         # Persist to database
-        store = get_session_store()
-        session_id = st.session_state["session_id"]
-        
-        # Check if session exists, create if not
-        existing_session = store.get_session(session_id)
-        if not existing_session:
-            store.create_session(
+        try:
+            store = get_session_store()
+            session_id = st.session_state["session_id"]
+            
+            # Check if session exists, create if not
+            existing_session = store.get_session(session_id)
+            if not existing_session:
+                store.create_session(
+                    session_id,
+                    challenge,
+                    st.session_state.get("user_name", ""),
+                    st.session_state.get("user_email", ""),
+                )
+            
+            # Update session with results
+            store.update_session(
                 session_id,
-                challenge,
-                st.session_state.get("user_name", ""),
-                st.session_state.get("user_email", ""),
+                {
+                    "hmw_results": results["hmw"],
+                    "sketch_prompts": results["sketch_prompts"],
+                    "image_urls": [img.get("url") for img in results["images"]],
+                    "layout_results": results["layouts"],
+                },
             )
+        except Exception as db_error:
+            # Don't fail generation if database save fails
+            print(f"Warning: Failed to save to database: {db_error}")
         
-        # Update session with results
-        store.update_session(
-            session_id,
-            {
-                "hmw_results": results["hmw"],
-                "sketch_prompts": results["sketch_prompts"],
-                "image_urls": [img.get("url") for img in results["images"]],
-                "layout_results": results["layouts"],
-            },
-        )
     except Exception as e:
         error_msg = str(e)
+        import traceback
+        print(f"Generation error: {error_msg}")
+        print(traceback.format_exc())
+        
         if "rate limit" in error_msg.lower() or "429" in error_msg:
             st.session_state["error_message"] = (
                 "Rate limit reached. Please wait a moment and try again."
             )
-        elif "OPENAI_API_KEY" in error_msg:
+        elif "OPENAI_API_KEY" in error_msg or "API key" in error_msg:
             st.session_state["error_message"] = (
                 "API key not configured. Please set OPENAI_API_KEY in your .env file."
             )
@@ -143,6 +155,7 @@ async def run_generation(challenge: str) -> None:
             st.session_state["error_message"] = f"Error: {error_msg}"
         st.session_state["is_generating"] = False
         st.session_state["generation_complete"] = False
+        raise  # Re-raise to be caught by outer handler
 
 
 def render_main() -> None:
