@@ -552,12 +552,13 @@ h4, .stMarkdown h4 {{
     line-height: 1.6 !important;
 }}
 
-/* Labels */
+/* Labels - Helvetica */
 label {{
     font-size: 0.875rem !important;
     color: #424242 !important;
     font-weight: 500 !important;
     margin-bottom: 0.5rem !important;
+    font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
 /* Dividers - subtle */
