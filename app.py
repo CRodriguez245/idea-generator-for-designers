@@ -157,23 +157,11 @@ def render_main() -> None:
         help="Be specific about the problem, context, and users you're designing for."
     )
 
-    col_submit, col_reset = st.columns([2, 1], gap="small")
-    with col_submit:
-        generate_clicked = st.button(
-            "Generate Concepts",
-            type="primary",
-            disabled=st.session_state["is_generating"] or not challenge.strip(),
-        )
-    with col_reset:
-        if st.button("Reset"):
-            # Clear all state including generation flags
-            for key in ["hmw_results", "sketch_results", "layout_results", "sketch_prompts", "image_urls", "generation_complete", "is_generating", "error_message", "current_section"]:
-                if key in st.session_state:
-                    st.session_state[key] = [] if isinstance(st.session_state[key], list) else False
-            # Don't modify challenge_text directly - it's bound to a widget
-            # User can clear it manually or we use a separate reset mechanism
-            st.session_state["session_id"] = None
-            st.rerun()
+    generate_clicked = st.button(
+        "Generate Concepts",
+        type="primary",
+        disabled=st.session_state["is_generating"] or not challenge.strip(),
+    )
     
     # Add a force reset button if stuck in generating state
     if st.session_state.get("is_generating"):
