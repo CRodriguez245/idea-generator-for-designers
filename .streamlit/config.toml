@@ -8,3 +8,6 @@ font = "Helvetica, Arial, sans-serif"
 [client]
 toolbarMode = "minimal"
 
+[browser]
+gatherUsageStats = false
+

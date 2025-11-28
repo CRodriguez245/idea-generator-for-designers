@@ -62,7 +62,9 @@ def init_session_state() -> None:
 
 def render_sidebar() -> None:
     """Render sidebar controls and contextual info."""
-    with st.sidebar:
+    # Sidebar hidden - ResearchBridge style has everything at top
+    pass
+    # with st.sidebar:
         st.title("Idea Generator")
         st.markdown(
             '<p style="color: #666666; font-size: 0.875rem; line-height: 1.5; margin-top: -0.5rem;">'
@@ -595,8 +597,28 @@ label {{
     font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
-/* Remove ALL dividers completely - comprehensive targeting */
-hr, 
+/* Hide sidebar completely - ResearchBridge has everything at top */
+section[data-testid="stSidebar"],
+.css-1d391kg,
+.css-1lcbmhc,
+[data-testid="stSidebar"] {{
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    min-width: 0 !important;
+}}
+
+/* Make main content full width */
+.block-container,
+.main .block-container {{
+    max-width: 100% !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}}
+
+/* Remove ALL dividers completely - aggressive removal */
+hr,
+hr[style],
 .stMarkdown hr,
 .stMarkdown > hr,
 [data-testid="stHorizontalBlock"] hr,
@@ -607,7 +629,9 @@ div[data-testid*="stHorizontalBlock"] hr,
 .main hr,
 [class*="block-container"] hr,
 div:has(> hr),
-div hr {{
+div hr,
+* hr,
+* > hr {{
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -618,6 +642,7 @@ div hr {{
     position: absolute !important;
     width: 0 !important;
     overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
 }}
 
 /* Info/Warning/Error messages - with depth */
@@ -741,12 +766,25 @@ div hr {{
     <script>
     (function() {
         function removeAllDividers() {
-            document.querySelectorAll('hr').forEach(function(hr) {
+            // Remove ALL hr elements aggressively
+            document.querySelectorAll('hr, * hr, * > hr').forEach(function(hr) {
+                hr.style.display = 'none';
+                hr.style.visibility = 'hidden';
+                hr.style.height = '0';
+                hr.style.margin = '0';
+                hr.style.padding = '0';
+                hr.style.border = 'none';
                 hr.remove();
             });
-            // Also remove any horizontal rules created by markdown
-            document.querySelectorAll('.stMarkdown hr, [class*="hr"]').forEach(function(hr) {
+            // Remove any horizontal rules created by markdown
+            document.querySelectorAll('.stMarkdown hr, [class*="hr"], [data-testid*="horizontal"]').forEach(function(hr) {
                 hr.remove();
+            });
+            // Remove Streamlit's divider elements
+            document.querySelectorAll('[class*="divider"], [class*="separator"], [data-testid*="horizontal"]').forEach(function(div) {
+                if (div.tagName === 'HR' || div.querySelector('hr')) {
+                    div.remove();
+                }
             });
         }
         
