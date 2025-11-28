@@ -177,13 +177,12 @@ def render_main() -> None:
         unsafe_allow_html=True
     )
 
-    # Design Challenge Card - use container approach
-    with st.container():
-        st.markdown(
-            '<div class="section-card-wrapper" data-section="design-challenge">',
-            unsafe_allow_html=True
-        )
-        st.markdown("### Design Challenge")
+    # Design Challenge Card - use JavaScript wrapper approach
+    st.markdown(
+        '<div class="section-card" id="card-design-challenge">',
+        unsafe_allow_html=True
+    )
+    st.markdown("### Design Challenge")
         st.markdown(
             '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
             unsafe_allow_html=True
@@ -222,7 +221,7 @@ def render_main() -> None:
                 st.session_state["generation_complete"] = False
                 st.session_state["error_message"] = "Generation was cancelled."
                 st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Handle generation
     if generate_clicked and challenge.strip() and not st.session_state["is_generating"]:
@@ -260,13 +259,12 @@ def render_main() -> None:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Results Overview Card - use container approach
-    with st.container():
-        st.markdown(
-            '<div class="section-card-wrapper" data-section="results-overview">',
-            unsafe_allow_html=True
-        )
-        st.markdown("### Results Overview")
+    # Results Overview Card - use JavaScript wrapper approach
+    st.markdown(
+        '<div class="section-card" id="card-results-overview">',
+        unsafe_allow_html=True
+    )
+    st.markdown("### Results Overview")
         st.markdown(
             '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
             unsafe_allow_html=True
@@ -364,8 +362,8 @@ def render_main() -> None:
         else:
             # Placeholder state
             st.info("Enter a challenge above and click Generate to see results.")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def inject_custom_css() -> None:
@@ -473,8 +471,9 @@ h4, .stMarkdown h4 {{
     margin-bottom: 1.5rem !important;
 }}
 
-/* Section card wrappers - style the container and its contents */
-.section-card-wrapper {{
+/* Section card wrappers - ResearchBridge style cards */
+/* Section cards - will be styled via JavaScript wrapping */
+.section-card {{
     background-color: #ffffff !important;
     padding: 2rem 2.5rem !important;
     border-radius: 12px !important;
@@ -485,16 +484,11 @@ h4, .stMarkdown h4 {{
     width: 100% !important;
     box-sizing: border-box !important;
     position: relative !important;
+    overflow: visible !important;
 }}
 
-/* Style Streamlit containers inside card wrappers */
-.section-card-wrapper .element-container,
-.section-card-wrapper [data-testid] {{
-    margin-bottom: 1rem !important;
-}}
-
-.section-card-wrapper h3,
-.section-card-wrapper .stMarkdown h3 {{
+.section-card h3,
+.section-card .stMarkdown h3 {{
     margin-top: 0 !important;
     padding-top: 0 !important;
 }}
@@ -601,18 +595,29 @@ label {{
     font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
-/* Remove ALL dividers completely */
+/* Remove ALL dividers completely - comprehensive targeting */
 hr, 
 .stMarkdown hr,
+.stMarkdown > hr,
 [data-testid="stHorizontalBlock"] hr,
 .element-container hr,
-div[data-testid="stHorizontalBlock"] hr {{
+div[data-testid="stHorizontalBlock"] hr,
+div[data-testid*="stHorizontalBlock"] hr,
+.block-container hr,
+.main hr,
+[class*="block-container"] hr,
+div:has(> hr),
+div hr {{
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    width: 0 !important;
+    overflow: hidden !important;
 }}
 
 /* Info/Warning/Error messages - with depth */
@@ -730,6 +735,77 @@ div[data-testid="stHorizontalBlock"] hr {{
 }}
 </style>"""
     st.markdown(css, unsafe_allow_html=True)
+    
+    # Inject JavaScript to remove dividers and wrap sections in cards
+    st.markdown("""
+    <script>
+    (function() {
+        function removeAllDividers() {
+            document.querySelectorAll('hr').forEach(function(hr) {
+                hr.remove();
+            });
+            // Also remove any horizontal rules created by markdown
+            document.querySelectorAll('.stMarkdown hr, [class*="hr"]').forEach(function(hr) {
+                hr.remove();
+            });
+        }
+        
+        function wrapSectionCards() {
+            const designCard = document.getElementById('card-design-challenge');
+            const resultsCard = document.getElementById('card-results-overview');
+            
+            [designCard, resultsCard].forEach(function(card) {
+                if (!card || card.dataset.wrapped) return;
+                
+                let next = card.nextElementSibling;
+                const elementsToMove = [];
+                const stopAt = card === designCard ? 'card-results-overview' : null;
+                
+                while (next && (!stopAt || next.id !== stopAt)) {
+                    if (next.nodeType === 1 && next.id !== 'card-results-overview') {
+                        if (next.classList.contains('element-container') || 
+                            next.hasAttribute('data-testid') || 
+                            (next.tagName === 'DIV' && !next.classList.contains('section-card'))) {
+                            elementsToMove.push(next);
+                        }
+                    }
+                    const temp = next.nextElementSibling;
+                    if (next.id === stopAt) break;
+                    next = temp;
+                }
+                
+                elementsToMove.forEach(function(el) {
+                    card.appendChild(el);
+                });
+                
+                card.dataset.wrapped = 'true';
+            });
+        }
+        
+        function init() {
+            removeAllDividers();
+            wrapSectionCards();
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+        
+        const observer = new MutationObserver(function() {
+            removeAllDividers();
+            wrapSectionCards();
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        setTimeout(init, 100);
+        setTimeout(init, 500);
+        setTimeout(init, 1500);
+    })();
+    </script>
+    """, unsafe_allow_html=True)
 
 
 def _encode_font_file(font_path: Path) -> str:
