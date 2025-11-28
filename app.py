@@ -135,11 +135,22 @@ async def run_generation(challenge: str) -> None:
 
 def render_main() -> None:
     """Render the main UI layout."""
+    # Header with title and subtitle
     st.title("Idea Generator for Designers")
     st.markdown(
         '<p class="section-description">Turn a single design challenge into reframes, sketches, and layouts — in seconds.</p>',
         unsafe_allow_html=True
     )
+    
+    # Optional session info at top
+    with st.container():
+        col_name, col_email = st.columns(2, gap="small")
+        with col_name:
+            st.text_input("Name (optional)", key="user_name", placeholder="Name (optional)")
+        with col_email:
+            st.text_input("Email (optional)", key="user_email", placeholder="Email (optional)")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # Design Challenge Card - use JavaScript wrapper approach
     st.markdown(
