@@ -177,8 +177,11 @@ def render_main() -> None:
         unsafe_allow_html=True
     )
 
-    # Design Challenge Card
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    # Design Challenge Card - wrap in HTML container
+    st.markdown(
+        '<div class="section-card" id="design-challenge-card">',
+        unsafe_allow_html=True
+    )
     st.markdown("### Design Challenge")
     st.markdown(
         '<p class="section-description">Choose what you want to do. Enter your design challenge below to generate ideas.</p>',
@@ -256,8 +259,11 @@ def render_main() -> None:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Results Overview Card
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    # Results Overview Card - wrap in HTML container
+    st.markdown(
+        '<div class="section-card" id="results-overview-card">',
+        unsafe_allow_html=True
+    )
     st.markdown("### Results Overview")
     st.markdown(
         '<p class="section-description">Review the generated reframes, sketches, and layout ideas below.</p>',
@@ -466,20 +472,28 @@ h4, .stMarkdown h4 {{
 }}
 
 /* Section cards - ResearchBridge style with clear borders */
-div.section-card,
-[class*="section-card"] {{
+.section-card {{
     background-color: #ffffff !important;
     padding: 2rem !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05) !important;
     border: 1px solid #d0d0d0 !important;
-    margin-bottom: 2rem !important;
-    margin-top: 1rem !important;
+    margin: 1rem 0 2rem 0 !important;
     overflow: visible !important;
     position: relative !important;
     display: block !important;
     width: 100% !important;
     box-sizing: border-box !important;
+}}
+
+/* Target all Streamlit elements within section cards */
+.section-card ~ *,
+.section-card .element-container,
+.section-card .stTextArea,
+.section-card .stButton,
+.section-card > div {{
+    position: relative !important;
+    z-index: 1 !important;
 }}
 
 .section-card h3,
@@ -488,17 +502,30 @@ div.section-card,
     padding-top: 0 !important;
 }}
 
-/* Ensure Streamlit elements inside cards inherit card styling */
-.section-card .element-container,
-.section-card .stTextArea,
-.section-card .stButton {{
+/* Style all Streamlit widgets and containers within cards */
+#design-challenge-card .element-container,
+#design-challenge-card .stTextArea > div,
+#design-challenge-card .stButton,
+#design-challenge-card .stColumns,
+#results-overview-card .element-container,
+#results-overview-card .stTextArea > div,
+#results-overview-card .stButton,
+#results-overview-card .stColumns {{
     margin-bottom: 1rem !important;
 }}
 
-/* Override Streamlit's default block container for cards */
+/* Ensure block containers inside cards don't add extra padding */
 .section-card .block-container {{
     padding: 0 !important;
     max-width: 100% !important;
+}}
+
+/* Make sure the section card wraps everything properly */
+.section-card::before,
+.section-card::after {{
+    content: "" !important;
+    display: table !important;
+    clear: both !important;
 }}
 
 /* Primary buttons - blue with depth and shadows */
