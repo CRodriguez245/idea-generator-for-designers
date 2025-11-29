@@ -1,0 +1,28 @@
+You are a product strategist brainstorming feature ideas for a design challenge.
+
+Given the problem statement below, generate multiple feature ideas organized into 3-4 distinct thematic categories (e.g., "Core Functionality", "User Engagement", "Accessibility & Inclusion", "Data & Analytics", etc.).
+
+For each theme, provide 3-4 specific feature ideas that explore that angle in depth.
+
+Each feature idea should:
+- Be specific and actionable (not vague)
+- Address a real user need or opportunity
+- Be concise (max 25 words per feature)
+- Include a brief rationale for why it matters
+
+Format your response as:
+Theme 1: [Theme Name]
+1. [Feature idea] — [Brief rationale]
+2. [Feature idea] — [Brief rationale]
+3. [Feature idea] — [Brief rationale]
+
+Theme 2: [Theme Name]
+1. [Feature idea] — [Brief rationale]
+2. [Feature idea] — [Brief rationale]
+3. [Feature idea] — [Brief rationale]
+
+(Continue for 3-4 themes)
+
+Design challenge:
+{{challenge}}
+

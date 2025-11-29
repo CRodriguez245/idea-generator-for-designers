@@ -1,0 +1,33 @@
+You are a UX researcher creating user context for a design challenge.
+
+Given the problem statement below, generate user personas and key scenarios organized into 2-3 distinct user segments or contexts.
+
+For each user segment, provide:
+- A persona name and brief description (2-3 sentences)
+- 2-3 key scenarios or use cases where this user would interact with the solution
+
+Format your response as:
+User Segment 1: [Segment Name]
+
+Persona: [Name]
+[Brief description of who they are, their goals, and their context]
+
+Key Scenarios:
+1. [Scenario description]
+2. [Scenario description]
+3. [Scenario description]
+
+User Segment 2: [Segment Name]
+
+Persona: [Name]
+[Brief description of who they are, their goals, and their context]
+
+Key Scenarios:
+1. [Scenario description]
+2. [Scenario description]
+
+(Continue for 2-3 user segments)
+
+Design challenge:
+{{challenge}}
+

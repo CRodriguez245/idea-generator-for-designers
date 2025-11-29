@@ -444,18 +444,192 @@ Format as numbered explanations, one per line."""
         return sketch_prompts[:3]
 
 
+async def generate_feature_ideas(challenge: str) -> Dict[str, List[Dict[str, str]]]:
+    """Generate thematically organized feature ideas using GPT-4."""
+    client = get_client()
+    template = load_prompt_template("features")
+    prompt = fill_template(template, challenge)
+
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a product strategist. Return multiple feature ideas organized into 3-4 thematic categories. Format as 'Theme 1: [Name]' followed by numbered features with rationale, then 'Theme 2: [Name]', etc.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.8,
+            max_tokens=1000,
+        )
+        content = response.choices[0].message.content or ""
+        
+        # Parse thematic groupings
+        themes: Dict[str, List[Dict[str, str]]] = {}
+        current_theme = None
+        lines = content.split("\n")
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Check for theme header
+            if line.lower().startswith("theme") and ":" in line:
+                parts = line.split(":", 1)
+                if len(parts) == 2:
+                    theme_name = parts[1].strip()
+                    current_theme = theme_name
+                    if current_theme not in themes:
+                        themes[current_theme] = []
+            elif ":" in line and not any(char.isdigit() for char in line.split(":")[0][:10]):
+                potential_theme = line.split(":")[0].strip()
+                if len(potential_theme) < 50:
+                    current_theme = potential_theme
+                    if current_theme not in themes:
+                        themes[current_theme] = []
+            elif current_theme and (line[0].isdigit() or line.startswith(("•", "-"))):
+                # Parse feature idea with rationale
+                for prefix in ["1.", "2.", "3.", "4.", "5.", "•", "-"]:
+                    if line.startswith(prefix):
+                        feature_text = line[len(prefix) :].strip()
+                        # Check for rationale separator (— or -)
+                        if "—" in feature_text:
+                            parts = feature_text.split("—", 1)
+                            feature = parts[0].strip()
+                            rationale = parts[1].strip()
+                        elif " - " in feature_text:
+                            parts = feature_text.split(" - ", 1)
+                            feature = parts[0].strip()
+                            rationale = parts[1].strip()
+                        else:
+                            feature = feature_text
+                            rationale = ""
+                        
+                        themes[current_theme].append({"feature": feature, "rationale": rationale})
+                        break
+        
+        # Fallback if no themes found
+        if not themes:
+            themes["Feature Ideas"] = [
+                {"feature": "Feature idea 1", "rationale": "Rationale 1"},
+                {"feature": "Feature idea 2", "rationale": "Rationale 2"},
+                {"feature": "Feature idea 3", "rationale": "Rationale 3"},
+            ]
+        
+        return themes
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate feature ideas: {e}") from e
+
+
+async def generate_user_context(challenge: str) -> List[Dict[str, Any]]:
+    """Generate user personas and scenarios using GPT-4."""
+    client = get_client()
+    template = load_prompt_template("user_context")
+    prompt = fill_template(template, challenge)
+
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a UX researcher. Return 2-3 user segments, each with a persona and key scenarios. Format as 'User Segment 1: [Name]' followed by persona description and scenarios, then 'User Segment 2: [Name]', etc.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.8,
+            max_tokens=800,
+        )
+        content = response.choices[0].message.content or ""
+        
+        # Parse user segments - split by "User Segment"
+        segments: List[Dict[str, Any]] = []
+        parts = content.split("User Segment")
+        
+        for part in parts[1:]:  # Skip first empty part
+            lines = [l.strip() for l in part.split("\n") if l.strip()]
+            if not lines:
+                continue
+            
+            # Extract segment name
+            segment_name = lines[0].split(":", 1)[1].strip() if ":" in lines[0] else lines[0]
+            current_segment = {"segment_name": segment_name, "persona": None, "scenarios": []}
+            
+            # Find persona section
+            persona_start = None
+            scenarios_start = None
+            for i, line in enumerate(lines):
+                if line.lower().startswith("persona"):
+                    persona_start = i
+                elif line.lower().startswith("key scenarios"):
+                    scenarios_start = i
+                    break
+            
+            # Parse persona
+            if persona_start is not None:
+                persona_lines = []
+                end_idx = scenarios_start if scenarios_start else len(lines)
+                for i in range(persona_start + 1, end_idx):
+                    if lines[i] and not lines[i].lower().startswith("key"):
+                        persona_lines.append(lines[i])
+                    else:
+                        break
+                
+                if persona_lines:
+                    persona_text = " ".join(persona_lines)
+                    # Try to extract name (first part before period or colon)
+                    persona_name = persona_text.split(":")[0].strip() if ":" in persona_text else persona_text.split(".")[0].strip()
+                    current_segment["persona"] = {"name": persona_name, "description": persona_text}
+            
+            # Parse scenarios
+            if scenarios_start is not None:
+                for i in range(scenarios_start + 1, len(lines)):
+                    line = lines[i]
+                    # Check if we hit a new segment
+                    if line.lower().startswith("user segment"):
+                        break
+                    
+                    # Parse numbered scenario
+                    for prefix in ["1.", "2.", "3.", "4.", "5.", "•", "-"]:
+                        if line.startswith(prefix):
+                            scenario_text = line[len(prefix) :].strip()
+                            current_segment["scenarios"].append(scenario_text)
+                            break
+            
+            if current_segment["persona"] or current_segment["scenarios"]:
+                segments.append(current_segment)
+        
+        # Fallback if no segments found
+        if not segments:
+            segments = [
+                {
+                    "segment_name": "Primary Users",
+                    "persona": {"name": "User", "description": "Primary user persona"},
+                    "scenarios": ["Scenario 1", "Scenario 2"],
+                }
+            ]
+        
+        return segments
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate user context: {e}") from e
+
+
 async def generate_all(challenge: str) -> Dict[str, Any]:
     """
     Generate all outputs in parallel for speed.
-    Returns dict with 'hmw', 'sketch_prompts', 'images', 'layouts', 'sketch_concepts'.
+    Returns dict with 'hmw', 'feature_ideas', 'sketch_prompts', 'images', 'user_context', 'layouts', 'sketch_concepts'.
     """
-    # Generate HMW, sketch prompts, and layouts in parallel
+    # Generate HMW, feature ideas, sketch prompts, layouts, and user context in parallel
     hmw_task = generate_hmw_statements(challenge)
+    feature_task = generate_feature_ideas(challenge)
     sketch_task = generate_sketch_prompts(challenge)
     layout_task = generate_layout_suggestions(challenge)
+    user_context_task = generate_user_context(challenge)
 
-    hmw_results, sketch_prompts, layouts = await asyncio.gather(
-        hmw_task, sketch_task, layout_task
+    hmw_results, feature_ideas, sketch_prompts, layouts, user_context = await asyncio.gather(
+        hmw_task, feature_task, sketch_task, layout_task, user_context_task
     )
 
     # Then generate images from sketch prompts
@@ -466,8 +640,10 @@ async def generate_all(challenge: str) -> Dict[str, Any]:
 
     return {
         "hmw": hmw_results,
+        "feature_ideas": feature_ideas,
         "sketch_prompts": sketch_prompts,
         "images": images,
+        "user_context": user_context,
         "layouts": layouts,
         "sketch_concepts": sketch_concepts,
     }

@@ -40,6 +40,8 @@ def init_session_state() -> None:
         "user_name": "",
         "user_email": "",
         "hmw_results": {},  # Dict[str, List[str]] - thematically organized
+        "feature_ideas": {},  # Dict[str, List[Dict[str, str]]] - thematically organized
+        "user_context": [],  # List[Dict[str, Any]] - user segments with personas and scenarios
         "sketch_results": [],
         "layout_results": {},  # Dict[str, List[Dict[str, str]]] - thematically organized
         "sketch_prompts": [],
@@ -76,6 +78,8 @@ async def run_generation(challenge: str) -> None:
         
         # Update session state
         st.session_state["hmw_results"] = results["hmw"]
+        st.session_state["feature_ideas"] = results.get("feature_ideas", {})
+        st.session_state["user_context"] = results.get("user_context", [])
         st.session_state["sketch_prompts"] = results["sketch_prompts"]
         st.session_state["sketch_concepts"] = results.get("sketch_concepts", results["sketch_prompts"])
         st.session_state["layout_results"] = results["layouts"]
@@ -238,8 +242,8 @@ def render_main() -> None:
         if st.session_state.get("is_generating"):
             st.session_state["is_generating"] = False
         
-        # Create tabs for the three sections
-        tab1, tab2, tab3 = st.tabs(["HMW Reframes", "Concept Sketches", "Layout Ideas"])
+        # Create tabs for the five sections
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["HMW Reframes", "Feature Ideas", "Concept Sketches", "User Context", "Layout Ideas"])
         
         # Display HMW Reframes in first tab
         with tab1:
@@ -268,8 +272,38 @@ def render_main() -> None:
                 st.info("No reframes generated yet.")
             st.markdown('</div>', unsafe_allow_html=True)
         
-        # Display Concept Sketches in second tab
+        # Display Feature Ideas in second tab
         with tab2:
+            st.markdown('<div class="result-section">', unsafe_allow_html=True)
+            feature_ideas = st.session_state.get("feature_ideas", {})
+            
+            if feature_ideas and isinstance(feature_ideas, dict):
+                st.markdown('<div class="result-heading">Feature Ideas:</div>', unsafe_allow_html=True)
+                theme_count = 0
+                for theme_name, features in feature_ideas.items():
+                    if features:  # Only show themes with features
+                        theme_count += 1
+                        st.markdown(f'<h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #1976d2; font-weight: 500;">{theme_name}</h3>', unsafe_allow_html=True)
+                        for i, feature_data in enumerate(features, 1):
+                            if isinstance(feature_data, dict):
+                                feature = feature_data.get("feature", f"Feature {i}")
+                                rationale = feature_data.get("rationale", "")
+                            else:
+                                feature = str(feature_data)
+                                rationale = ""
+                            st.markdown(f'<div class="result-content"><strong>{i}. {feature}</strong></div>', unsafe_allow_html=True)
+                            if rationale:
+                                st.markdown(f'<div style="margin-top: 0.5rem; margin-bottom: 1rem; color: #666666; font-size: 0.9375rem; font-style: italic;">{rationale}</div>', unsafe_allow_html=True)
+                            if i < len(features):
+                                st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
+                        if theme_count < len(feature_ideas):
+                            st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
+            else:
+                st.info("Feature ideas will appear here after generation.")
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Display Concept Sketches in third tab
+        with tab3:
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
             st.markdown('<div class="result-heading">Concept Sketches:</div>', unsafe_allow_html=True)
             image_urls = st.session_state.get("image_urls", [])
@@ -296,8 +330,42 @@ def render_main() -> None:
                 st.info("Sketches will appear here after generation.")
             st.markdown('</div>', unsafe_allow_html=True)
         
-        # Display Layout Ideas in third tab
-        with tab3:
+        # Display User Context in fourth tab
+        with tab4:
+            st.markdown('<div class="result-section">', unsafe_allow_html=True)
+            st.markdown('<div class="result-heading">User Context:</div>', unsafe_allow_html=True)
+            user_context = st.session_state.get("user_context", [])
+            
+            if user_context and isinstance(user_context, list):
+                for segment_idx, segment in enumerate(user_context, 1):
+                    segment_name = segment.get("segment_name", f"User Segment {segment_idx}")
+                    persona = segment.get("persona", {})
+                    scenarios = segment.get("scenarios", [])
+                    
+                    st.markdown(f'<h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #1976d2; font-weight: 500;">{segment_name}</h3>', unsafe_allow_html=True)
+                    
+                    if persona:
+                        persona_name = persona.get("name", "User")
+                        persona_desc = persona.get("description", "")
+                        st.markdown(f'<h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Persona: {persona_name}</h4>', unsafe_allow_html=True)
+                        if persona_desc:
+                            st.markdown(f'<div class="result-content">{persona_desc}</div>', unsafe_allow_html=True)
+                    
+                    if scenarios:
+                        st.markdown('<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Key Scenarios:</h4>', unsafe_allow_html=True)
+                        for i, scenario in enumerate(scenarios, 1):
+                            st.markdown(f'<div class="result-content"><strong>{i}.</strong> {scenario}</div>', unsafe_allow_html=True)
+                            if i < len(scenarios):
+                                st.markdown("<div style='margin: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                    
+                    if segment_idx < len(user_context):
+                        st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
+            else:
+                st.info("User context will appear here after generation.")
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Display Layout Ideas in fifth tab
+        with tab5:
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
             st.markdown('<div class="result-heading">Layout Ideas:</div>', unsafe_allow_html=True)
             layout_results = st.session_state.get("layout_results", {})
