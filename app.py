@@ -110,18 +110,23 @@ def restore_state_from_history() -> None:
     st.session_state["generation_complete"] = True
 
 
-async def refine_from_idea(idea_text: str, challenge: str) -> None:
+async def refine_from_idea(idea_text: str, challenge: str | None = None) -> None:
     """Refine results based on a selected idea."""
     try:
         # Save current state to history before refining
         save_state_to_history()
+        
+        # Use original challenge if available, otherwise use provided challenge
+        original_challenge = st.session_state.get("original_challenge") or challenge or st.session_state.get("challenge_text", "")
+        if not original_challenge:
+            raise ValueError("No challenge found for refinement")
         
         # Clear any previous errors
         st.session_state["error_message"] = ""
         st.session_state["is_generating"] = True
         
         # Run refinement generation
-        await run_generation(challenge, refine_from=idea_text)
+        await run_generation(original_challenge, refine_from=idea_text)
         
     except Exception as e:
         error_msg = str(e)
@@ -377,12 +382,10 @@ def render_main() -> None:
                             with col_btn:
                                 button_key = f"refine_hmw_{theme_name}_{i}"
                                 if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                    challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
-                                    save_state_to_history()
                                     loop = asyncio.new_event_loop()
                                     asyncio.set_event_loop(loop)
                                     try:
-                                        loop.run_until_complete(refine_from_idea(stmt, challenge))
+                                        loop.run_until_complete(refine_from_idea(stmt))
                                     finally:
                                         loop.close()
                                     st.rerun()
@@ -421,13 +424,11 @@ def render_main() -> None:
                             with col_btn:
                                 button_key = f"refine_feature_{theme_name}_{i}"
                                 if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                    challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
                                     idea_text = f"{feature}. {rationale}" if rationale else feature
-                                    save_state_to_history()
                                     loop = asyncio.new_event_loop()
                                     asyncio.set_event_loop(loop)
                                     try:
-                                        loop.run_until_complete(refine_from_idea(idea_text, challenge))
+                                        loop.run_until_complete(refine_from_idea(idea_text))
                                     finally:
                                         loop.close()
                                     st.rerun()
@@ -465,12 +466,10 @@ def render_main() -> None:
                             button_key = f"refine_sketch_{i}"
                             concept_text = sketch_concepts[i - 1] if i <= len(sketch_concepts) else ""
                             if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
-                                save_state_to_history()
                                 loop = asyncio.new_event_loop()
                                 asyncio.set_event_loop(loop)
                                 try:
-                                    loop.run_until_complete(refine_from_idea(concept_text, challenge))
+                                    loop.run_until_complete(refine_from_idea(concept_text))
                                 finally:
                                     loop.close()
                                 st.rerun()
@@ -507,13 +506,11 @@ def render_main() -> None:
                         with col_btn:
                             button_key = f"refine_persona_{segment_idx}"
                             if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
                                 idea_text = f"Persona: {persona_name}. {persona_desc}"
-                                save_state_to_history()
                                 loop = asyncio.new_event_loop()
                                 asyncio.set_event_loop(loop)
                                 try:
-                                    loop.run_until_complete(refine_from_idea(idea_text, challenge))
+                                    loop.run_until_complete(refine_from_idea(idea_text))
                                 finally:
                                     loop.close()
                                 st.rerun()
@@ -527,13 +524,11 @@ def render_main() -> None:
                             with col_btn:
                                 button_key = f"refine_scenario_{segment_idx}_{i}"
                                 if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                    challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
                                     idea_text = f"Persona: {persona_name if persona else 'User'}. Scenario: {scenario}"
-                                    save_state_to_history()
                                     loop = asyncio.new_event_loop()
                                     asyncio.set_event_loop(loop)
                                     try:
-                                        loop.run_until_complete(refine_from_idea(idea_text, challenge))
+                                        loop.run_until_complete(refine_from_idea(idea_text))
                                     finally:
                                         loop.close()
                                     st.rerun()
@@ -578,13 +573,11 @@ def render_main() -> None:
                             with col_btn:
                                 button_key = f"refine_layout_{theme_name}_{i}"
                                 if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                    challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
                                     idea_text = f"{title}: {desc}"
-                                    save_state_to_history()
                                     loop = asyncio.new_event_loop()
                                     asyncio.set_event_loop(loop)
                                     try:
-                                        loop.run_until_complete(refine_from_idea(idea_text, challenge))
+                                        loop.run_until_complete(refine_from_idea(idea_text))
                                     finally:
                                         loop.close()
                                     st.rerun()
