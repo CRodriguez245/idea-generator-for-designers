@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 
 from utils.openai_helpers import generate_all
 from utils.session_store import SessionStore
-from utils.ui_helpers import create_export_text, format_hmw_for_display, format_layout_for_display, render_visual_carousel, render_loading_carousel
+from utils.ui_helpers import create_export_text, format_hmw_for_display, format_layout_for_display
 
 # Load environment variables
 load_dotenv()
@@ -49,7 +49,6 @@ def init_session_state() -> None:
         "error_message": "",
         "session_id": None,
         "generation_complete": False,
-        "current_section": 0,  # 0=HMW, 1=Sketches, 2=Layouts
     }
 
     for key, value in defaults.items():
@@ -231,37 +230,19 @@ def render_main() -> None:
     if st.session_state.get("is_generating") and not has_results:
         st.info("Generating ideas... This may take 30-60 seconds. Please be patient.")
         st.warning("If this takes longer than 2 minutes, click 'Cancel Generation' and try again.")
-        # Show placeholder carousel during loading
-        section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
-        render_loading_carousel(section_names)
         return  # Don't show results while loading
     
-    # Show results with carousel navigation
+    # Show results with tabular navigation
     if has_results:
         # Clear is_generating flag if we have results (might be stale)
         if st.session_state.get("is_generating"):
             st.session_state["is_generating"] = False
-        # Navigation for three sections
-        section_names = ["HMW Reframes", "Concept Sketches", "Layout Ideas"]
-        current_section = st.session_state.get("current_section", 0)
         
-        # Prepare preview data for carousel
-        preview_data = {
-            "hmw_results": st.session_state.get("hmw_results", {}),
-            "image_urls": st.session_state.get("image_urls", []),
-            "layout_results": st.session_state.get("layout_results", {}),
-        }
+        # Create tabs for the three sections
+        tab1, tab2, tab3 = st.tabs(["HMW Reframes", "Concept Sketches", "Layout Ideas"])
         
-        # Render visual carousel with previews
-        new_section = render_visual_carousel(section_names, current_section, "section_nav", preview_data)
-        if new_section != current_section:
-            st.session_state["current_section"] = new_section
-            st.rerun()
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Display current section content - ResearchBridge style structure
-        if current_section == 0:  # HMW Reframes
+        # Display HMW Reframes in first tab
+        with tab1:
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
             hmw_results = st.session_state.get("hmw_results", {})
             
@@ -287,7 +268,8 @@ def render_main() -> None:
                 st.info("No reframes generated yet.")
             st.markdown('</div>', unsafe_allow_html=True)
         
-        elif current_section == 1:  # Concept Sketches
+        # Display Concept Sketches in second tab
+        with tab2:
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
             st.markdown('<div class="result-heading">Concept Sketches:</div>', unsafe_allow_html=True)
             image_urls = st.session_state.get("image_urls", [])
@@ -314,7 +296,8 @@ def render_main() -> None:
                 st.info("Sketches will appear here after generation.")
             st.markdown('</div>', unsafe_allow_html=True)
         
-        elif current_section == 2:  # Layout Ideas
+        # Display Layout Ideas in third tab
+        with tab3:
             st.markdown('<div class="result-section">', unsafe_allow_html=True)
             st.markdown('<div class="result-heading">Layout Ideas:</div>', unsafe_allow_html=True)
             layout_results = st.session_state.get("layout_results", {})
