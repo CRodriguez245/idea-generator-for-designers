@@ -51,6 +51,9 @@ def init_session_state() -> None:
         "error_message": "",
         "session_id": None,
         "generation_complete": False,
+        "history_stack": [],  # Stack of previous states for back navigation
+        "current_refinement": None,  # Currently selected idea being refined
+        "original_challenge": "",  # Original challenge text
     }
 
     for key, value in defaults.items():
@@ -68,13 +71,95 @@ def render_sidebar() -> None:
     pass
 
 
-async def run_generation(challenge: str) -> None:
-    """Run the full generation pipeline and update session state."""
+def save_state_to_history() -> None:
+    """Save current state to history stack for back navigation."""
+    history_entry = {
+        "hmw_results": st.session_state.get("hmw_results", {}),
+        "feature_ideas": st.session_state.get("feature_ideas", {}),
+        "user_context": st.session_state.get("user_context", []),
+        "sketch_prompts": st.session_state.get("sketch_prompts", []),
+        "sketch_concepts": st.session_state.get("sketch_concepts", []),
+        "layout_results": st.session_state.get("layout_results", {}),
+        "image_urls": st.session_state.get("image_urls", []),
+        "current_refinement": st.session_state.get("current_refinement"),
+        "challenge_text": st.session_state.get("challenge_text", ""),
+    }
+    
+    if "history_stack" not in st.session_state:
+        st.session_state["history_stack"] = []
+    
+    st.session_state["history_stack"].append(history_entry)
+
+
+def restore_state_from_history() -> None:
+    """Restore previous state from history stack."""
+    if not st.session_state.get("history_stack"):
+        return
+    
+    previous_state = st.session_state["history_stack"].pop()
+    
+    st.session_state["hmw_results"] = previous_state.get("hmw_results", {})
+    st.session_state["feature_ideas"] = previous_state.get("feature_ideas", {})
+    st.session_state["user_context"] = previous_state.get("user_context", [])
+    st.session_state["sketch_prompts"] = previous_state.get("sketch_prompts", [])
+    st.session_state["sketch_concepts"] = previous_state.get("sketch_concepts", [])
+    st.session_state["layout_results"] = previous_state.get("layout_results", {})
+    st.session_state["image_urls"] = previous_state.get("image_urls", [])
+    st.session_state["current_refinement"] = previous_state.get("current_refinement")
+    st.session_state["challenge_text"] = previous_state.get("challenge_text", "")
+    st.session_state["generation_complete"] = True
+
+
+async def refine_from_idea(idea_text: str, challenge: str) -> None:
+    """Refine results based on a selected idea."""
+    try:
+        # Save current state to history before refining
+        save_state_to_history()
+        
+        # Clear any previous errors
+        st.session_state["error_message"] = ""
+        st.session_state["is_generating"] = True
+        
+        # Run refinement generation
+        await run_generation(challenge, refine_from=idea_text)
+        
+    except Exception as e:
+        error_msg = str(e)
+        import traceback
+        print(f"Refinement error: {error_msg}")
+        print(traceback.format_exc())
+        
+        if "rate limit" in error_msg.lower() or "429" in error_msg:
+            st.session_state["error_message"] = (
+                "Rate limit reached. Please wait a moment and try again."
+            )
+        else:
+            st.session_state["error_message"] = f"Refinement failed: {error_msg}"
+        st.session_state["is_generating"] = False
+        st.session_state["generation_complete"] = False
+        raise
+
+
+async def run_generation(challenge: str, refine_from: str | None = None) -> None:
+    """Run the full generation pipeline and update session state.
+    
+    Args:
+        challenge: The design challenge text
+        refine_from: Optional selected idea to refine/build upon
+    """
     try:
         # Clear any previous errors
         st.session_state["error_message"] = ""
         
-        results = await generate_all(challenge)
+        # If refining, add context to challenge
+        if refine_from:
+            # Extract original challenge if we're in a refinement state
+            original = st.session_state.get("original_challenge") or challenge
+            refined_challenge = f"{original}\n\nBuild upon and refine this specific idea: {refine_from}\n\nGenerate new ideas that expand and deepen this concept, exploring it from different angles and contexts."
+        else:
+            refined_challenge = challenge
+        
+        results = await generate_all(refined_challenge)
         
         # Update session state
         st.session_state["hmw_results"] = results["hmw"]
@@ -87,6 +172,13 @@ async def run_generation(challenge: str) -> None:
         st.session_state["generation_complete"] = True
         st.session_state["is_generating"] = False  # Clear generating flag on success
         st.session_state["error_message"] = ""
+        if refine_from:
+            st.session_state["current_refinement"] = refine_from
+        else:
+            st.session_state["current_refinement"] = None
+            # Save original challenge on first generation
+            if not st.session_state.get("original_challenge"):
+                st.session_state["original_challenge"] = challenge
         
         # Persist to database
         try:
@@ -181,6 +273,10 @@ def render_main() -> None:
         st.session_state["is_generating"] = True
         st.session_state["generation_complete"] = False
         st.session_state["error_message"] = ""
+        # Clear history and refinement on new generation
+        st.session_state["history_stack"] = []
+        st.session_state["current_refinement"] = None
+        st.session_state["original_challenge"] = challenge
         
         # Run async generation (blocks UI, which is acceptable for this use case)
         loop = None
@@ -242,6 +338,18 @@ def render_main() -> None:
         if st.session_state.get("is_generating"):
             st.session_state["is_generating"] = False
         
+        # Show back button and refinement indicator if we have history
+        if st.session_state.get("history_stack") or st.session_state.get("current_refinement"):
+            col_back, col_ref = st.columns([1, 4])
+            with col_back:
+                if st.button("← Back", key="back_button", disabled=not st.session_state.get("history_stack")):
+                    restore_state_from_history()
+                    st.rerun()
+            with col_ref:
+                if st.session_state.get("current_refinement"):
+                    st.info(f"Currently refining: {st.session_state['current_refinement'][:100]}...")
+            st.markdown("<br>", unsafe_allow_html=True)
+        
         # Create tabs for the five sections
         tab1, tab2, tab3, tab4, tab5 = st.tabs(["HMW Reframes", "Feature Ideas", "Concept Sketches", "User Context", "Layout Ideas"])
         
@@ -263,7 +371,21 @@ def render_main() -> None:
                         theme_count += 1
                         st.markdown(f'<h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #1976d2; font-weight: 500;">{theme_name}</h3>', unsafe_allow_html=True)
                         for i, stmt in enumerate(statements, 1):
-                            st.markdown(f'<div class="result-content"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
+                            col_idea, col_btn = st.columns([4, 1])
+                            with col_idea:
+                                st.markdown(f'<div class="result-content"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
+                            with col_btn:
+                                button_key = f"refine_hmw_{theme_name}_{i}"
+                                if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
+                                    challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
+                                    save_state_to_history()
+                                    loop = asyncio.new_event_loop()
+                                    asyncio.set_event_loop(loop)
+                                    try:
+                                        loop.run_until_complete(refine_from_idea(stmt, challenge))
+                                    finally:
+                                        loop.close()
+                                    st.rerun()
                             if i < len(statements):
                                 st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(hmw_results):
@@ -291,9 +413,24 @@ def render_main() -> None:
                             else:
                                 feature = str(feature_data)
                                 rationale = ""
-                            st.markdown(f'<div class="result-content"><strong>{i}. {feature}</strong></div>', unsafe_allow_html=True)
-                            if rationale:
-                                st.markdown(f'<div style="margin-top: 0.5rem; margin-bottom: 1rem; color: #666666; font-size: 0.9375rem; font-style: italic;">{rationale}</div>', unsafe_allow_html=True)
+                            col_idea, col_btn = st.columns([4, 1])
+                            with col_idea:
+                                st.markdown(f'<div class="result-content"><strong>{i}. {feature}</strong></div>', unsafe_allow_html=True)
+                                if rationale:
+                                    st.markdown(f'<div style="margin-top: 0.5rem; margin-bottom: 1rem; color: #666666; font-size: 0.9375rem; font-style: italic;">{rationale}</div>', unsafe_allow_html=True)
+                            with col_btn:
+                                button_key = f"refine_feature_{theme_name}_{i}"
+                                if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
+                                    challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
+                                    idea_text = f"{feature}. {rationale}" if rationale else feature
+                                    save_state_to_history()
+                                    loop = asyncio.new_event_loop()
+                                    asyncio.set_event_loop(loop)
+                                    try:
+                                        loop.run_until_complete(refine_from_idea(idea_text, challenge))
+                                    finally:
+                                        loop.close()
+                                    st.rerun()
                             if i < len(features):
                                 st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(feature_ideas):
@@ -314,14 +451,29 @@ def render_main() -> None:
             if image_urls:
                 for i, url in enumerate(image_urls, 1):
                     if url:
-                        # Display smaller image
-                        st.image(url, width=400)
-                        # Display conceptual explanation text below the image
-                        if i <= len(sketch_concepts) and sketch_concepts[i - 1]:
-                            st.markdown(
-                                f'<p style="margin-top: 0.75rem; margin-bottom: 1.5rem; color: #666666; font-size: 0.9375rem; line-height: 1.6;">{sketch_concepts[i - 1]}</p>',
-                                unsafe_allow_html=True
-                            )
+                        col_img, col_btn = st.columns([4, 1])
+                        with col_img:
+                            # Display smaller image
+                            st.image(url, width=400)
+                            # Display conceptual explanation text below the image
+                            if i <= len(sketch_concepts) and sketch_concepts[i - 1]:
+                                st.markdown(
+                                    f'<p style="margin-top: 0.75rem; margin-bottom: 1.5rem; color: #666666; font-size: 0.9375rem; line-height: 1.6;">{sketch_concepts[i - 1]}</p>',
+                                    unsafe_allow_html=True
+                                )
+                        with col_btn:
+                            button_key = f"refine_sketch_{i}"
+                            concept_text = sketch_concepts[i - 1] if i <= len(sketch_concepts) else ""
+                            if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
+                                challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
+                                save_state_to_history()
+                                loop = asyncio.new_event_loop()
+                                asyncio.set_event_loop(loop)
+                                try:
+                                    loop.run_until_complete(refine_from_idea(concept_text, challenge))
+                                finally:
+                                    loop.close()
+                                st.rerun()
                         if i < len(image_urls):
                             st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
                     else:
@@ -347,14 +499,44 @@ def render_main() -> None:
                     if persona:
                         persona_name = persona.get("name", "User")
                         persona_desc = persona.get("description", "")
-                        st.markdown(f'<h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Persona: {persona_name}</h4>', unsafe_allow_html=True)
-                        if persona_desc:
-                            st.markdown(f'<div class="result-content">{persona_desc}</div>', unsafe_allow_html=True)
+                        col_persona, col_btn = st.columns([4, 1])
+                        with col_persona:
+                            st.markdown(f'<h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Persona: {persona_name}</h4>', unsafe_allow_html=True)
+                            if persona_desc:
+                                st.markdown(f'<div class="result-content">{persona_desc}</div>', unsafe_allow_html=True)
+                        with col_btn:
+                            button_key = f"refine_persona_{segment_idx}"
+                            if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
+                                challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
+                                idea_text = f"Persona: {persona_name}. {persona_desc}"
+                                save_state_to_history()
+                                loop = asyncio.new_event_loop()
+                                asyncio.set_event_loop(loop)
+                                try:
+                                    loop.run_until_complete(refine_from_idea(idea_text, challenge))
+                                finally:
+                                    loop.close()
+                                st.rerun()
                     
                     if scenarios:
                         st.markdown('<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Key Scenarios:</h4>', unsafe_allow_html=True)
                         for i, scenario in enumerate(scenarios, 1):
-                            st.markdown(f'<div class="result-content"><strong>{i}.</strong> {scenario}</div>', unsafe_allow_html=True)
+                            col_scenario, col_btn = st.columns([4, 1])
+                            with col_scenario:
+                                st.markdown(f'<div class="result-content"><strong>{i}.</strong> {scenario}</div>', unsafe_allow_html=True)
+                            with col_btn:
+                                button_key = f"refine_scenario_{segment_idx}_{i}"
+                                if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
+                                    challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
+                                    idea_text = f"Persona: {persona_name if persona else 'User'}. Scenario: {scenario}"
+                                    save_state_to_history()
+                                    loop = asyncio.new_event_loop()
+                                    asyncio.set_event_loop(loop)
+                                    try:
+                                        loop.run_until_complete(refine_from_idea(idea_text, challenge))
+                                    finally:
+                                        loop.close()
+                                    st.rerun()
                             if i < len(scenarios):
                                 st.markdown("<div style='margin: 0.5rem 0;'></div>", unsafe_allow_html=True)
                     
@@ -389,8 +571,23 @@ def render_main() -> None:
                                 # Fallback for unexpected format
                                 title = f"Layout {i}"
                                 desc = str(layout)
-                            st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
-                            st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
+                            col_layout, col_btn = st.columns([4, 1])
+                            with col_layout:
+                                st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
+                            with col_btn:
+                                button_key = f"refine_layout_{theme_name}_{i}"
+                                if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
+                                    challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
+                                    idea_text = f"{title}: {desc}"
+                                    save_state_to_history()
+                                    loop = asyncio.new_event_loop()
+                                    asyncio.set_event_loop(loop)
+                                    try:
+                                        loop.run_until_complete(refine_from_idea(idea_text, challenge))
+                                    finally:
+                                        loop.close()
+                                    st.rerun()
                             if i < len(layouts):
                                 st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(layout_results):

@@ -11,6 +11,8 @@ For each layout, provide:
 
 Keep descriptions under 120 words per layout.
 
+If the challenge includes a refinement directive (e.g., "Build upon and refine this specific idea:"), focus your layouts on implementing and expanding that idea with detailed structural approaches.
+
 Format your response as:
 Theme 1: [Theme Name]
 1. [Title]

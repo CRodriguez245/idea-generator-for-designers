@@ -10,6 +10,8 @@ Each feature idea should:
 - Be concise (max 25 words per feature)
 - Include a brief rationale for why it matters
 
+If the challenge includes a refinement directive (e.g., "Build upon and refine this specific idea:"), focus your feature ideas on building upon and expanding that idea, creating features that support and enhance it.
+
 Format your response as:
 Theme 1: [Theme Name]
 1. [Feature idea] — [Brief rationale]

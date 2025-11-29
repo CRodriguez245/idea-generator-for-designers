@@ -6,6 +6,8 @@ For each user segment, provide:
 - A persona name and brief description (2-3 sentences)
 - 2-3 key scenarios or use cases where this user would interact with the solution
 
+If the challenge includes a refinement directive (e.g., "Build upon and refine this specific idea:"), tailor your personas and scenarios to explore how that idea would work for different user types and contexts.
+
 Format your response as:
 User Segment 1: [Segment Name]
 

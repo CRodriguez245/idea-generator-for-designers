@@ -6,6 +6,8 @@ Each prompt should:
 - Suggest a mood or visual style (e.g., "minimal linework", "bold color blocking")
 - Focus on communicating the concept, not the final polished UI
 
+If the challenge includes a refinement directive (e.g., "Build upon and refine this specific idea:"), create visual prompts that explore how that idea would look visually, showing different visual interpretations and approaches.
+
 Design challenge:
 {{challenge}}
 

@@ -9,6 +9,8 @@ Each statement should:
 - Stay concise (max 20 words)
 - Invite creative exploration without prescribing a solution
 
+If the challenge includes a refinement directive (e.g., "Build upon and refine this specific idea:"), focus your statements on building upon and expanding that idea in new and creative ways while maintaining the core concept.
+
 Format your response as:
 Theme 1: [Theme Name]
 1. [HMW statement]
