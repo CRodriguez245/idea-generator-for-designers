@@ -54,6 +54,7 @@ def init_session_state() -> None:
         "history_stack": [],  # Stack of previous states for back navigation
         "current_refinement": None,  # Currently selected idea being refined
         "original_challenge": "",  # Original challenge text
+        "selected_ideas": [],  # List of selected ideas to build upon
     }
 
     for key, value in defaults.items():
@@ -110,23 +111,43 @@ def restore_state_from_history() -> None:
     st.session_state["generation_complete"] = True
 
 
-async def refine_from_idea(idea_text: str, challenge: str | None = None) -> None:
-    """Refine results based on a selected idea."""
+async def build_on_selected_ideas(selected_idea_ids: list[str]) -> None:
+    """Build upon selected ideas."""
     try:
+        if not selected_idea_ids:
+            raise ValueError("No ideas selected")
+        
+        # Get the actual idea texts from session state
+        selected_idea_texts = []
+        for idea_id in selected_idea_ids:
+            idea_text = st.session_state.get(f"idea_{idea_id}", "")
+            if idea_text:
+                selected_idea_texts.append(idea_text)
+        
+        if not selected_idea_texts:
+            raise ValueError("No valid ideas found in selection")
+        
         # Save current state to history before refining
         save_state_to_history()
         
-        # Use original challenge if available, otherwise use provided challenge
-        original_challenge = st.session_state.get("original_challenge") or challenge or st.session_state.get("challenge_text", "")
+        # Use original challenge if available
+        original_challenge = st.session_state.get("original_challenge") or st.session_state.get("challenge_text", "")
         if not original_challenge:
             raise ValueError("No challenge found for refinement")
+        
+        # Combine selected ideas into a single refinement context
+        ideas_text = "\n".join([f"- {idea}" for idea in selected_idea_texts])
+        combined_refinement = f"Build upon and expand these ideas:\n{ideas_text}"
         
         # Clear any previous errors
         st.session_state["error_message"] = ""
         st.session_state["is_generating"] = True
         
         # Run refinement generation
-        await run_generation(original_challenge, refine_from=idea_text)
+        await run_generation(original_challenge, refine_from=combined_refinement)
+        
+        # Clear selected ideas after building
+        st.session_state["selected_ideas"] = []
         
     except Exception as e:
         error_msg = str(e)
@@ -282,6 +303,7 @@ def render_main() -> None:
         st.session_state["history_stack"] = []
         st.session_state["current_refinement"] = None
         st.session_state["original_challenge"] = challenge
+        st.session_state["selected_ideas"] = []  # Clear selections on new generation
         
         # Run async generation (blocks UI, which is acceptable for this use case)
         loop = None
@@ -352,7 +374,27 @@ def render_main() -> None:
                     st.rerun()
             with col_ref:
                 if st.session_state.get("current_refinement"):
-                    st.info(f"Currently refining: {st.session_state['current_refinement'][:100]}...")
+                    st.info(f"Currently building on: {st.session_state['current_refinement'][:100]}...")
+            st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Show "Build on" button if any ideas are selected
+        selected_ideas = st.session_state.get("selected_ideas", [])
+        if selected_ideas:
+            col_build, col_clear = st.columns([2, 1])
+            with col_build:
+                if st.button("Build on Selected Ideas", key="build_on_button", type="primary", disabled=st.session_state.get("is_generating")):
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        loop.run_until_complete(build_on_selected_ideas(selected_ideas))
+                    finally:
+                        loop.close()
+                    st.rerun()
+            with col_clear:
+                if st.button("Clear Selection", key="clear_selection"):
+                    st.session_state["selected_ideas"] = []
+                    st.rerun()
+            st.markdown(f"<p style='color: #666666; font-size: 0.875rem; margin-top: 0.5rem;'>{len(selected_ideas)} idea(s) selected</p>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
         
         # Create tabs for the five sections
@@ -376,19 +418,29 @@ def render_main() -> None:
                         theme_count += 1
                         st.markdown(f'<h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #1976d2; font-weight: 500;">{theme_name}</h3>', unsafe_allow_html=True)
                         for i, stmt in enumerate(statements, 1):
-                            col_idea, col_btn = st.columns([4, 1])
-                            with col_idea:
-                                st.markdown(f'<div class="result-content"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
-                            with col_btn:
-                                button_key = f"refine_hmw_{theme_name}_{i}"
-                                if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                    loop = asyncio.new_event_loop()
-                                    asyncio.set_event_loop(loop)
-                                    try:
-                                        loop.run_until_complete(refine_from_idea(stmt))
-                                    finally:
-                                        loop.close()
-                                    st.rerun()
+                            idea_id = f"hmw_{theme_name}_{i}"
+                            idea_text = stmt
+                            
+                            # Initialize selected_ideas if needed
+                            if "selected_ideas" not in st.session_state:
+                                st.session_state["selected_ideas"] = []
+                            
+                            checkbox_key = f"checkbox_{idea_id}"
+                            checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                            
+                            # Update selection based on checkbox
+                            if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].append(idea_id)
+                                st.session_state[f"idea_{idea_id}"] = idea_text
+                            elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].remove(idea_id)
+                                if f"idea_{idea_id}" in st.session_state:
+                                    del st.session_state[f"idea_{idea_id}"]
+                            
+                            # Highlight selected ideas
+                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                            st.markdown(f'<div class="result-content" style="{highlight_style}"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
                             if i < len(statements):
                                 st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(hmw_results):
@@ -416,22 +468,32 @@ def render_main() -> None:
                             else:
                                 feature = str(feature_data)
                                 rationale = ""
-                            col_idea, col_btn = st.columns([4, 1])
-                            with col_idea:
-                                st.markdown(f'<div class="result-content"><strong>{i}. {feature}</strong></div>', unsafe_allow_html=True)
-                                if rationale:
-                                    st.markdown(f'<div style="margin-top: 0.5rem; margin-bottom: 1rem; color: #666666; font-size: 0.9375rem; font-style: italic;">{rationale}</div>', unsafe_allow_html=True)
-                            with col_btn:
-                                button_key = f"refine_feature_{theme_name}_{i}"
-                                if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                    idea_text = f"{feature}. {rationale}" if rationale else feature
-                                    loop = asyncio.new_event_loop()
-                                    asyncio.set_event_loop(loop)
-                                    try:
-                                        loop.run_until_complete(refine_from_idea(idea_text))
-                                    finally:
-                                        loop.close()
-                                    st.rerun()
+                            
+                            idea_id = f"feature_{theme_name}_{i}"
+                            idea_text = f"{feature}. {rationale}" if rationale else feature
+                            
+                            # Initialize selected_ideas if needed
+                            if "selected_ideas" not in st.session_state:
+                                st.session_state["selected_ideas"] = []
+                            
+                            checkbox_key = f"checkbox_{idea_id}"
+                            checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                            
+                            # Update selection based on checkbox
+                            if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].append(idea_id)
+                                st.session_state[f"idea_{idea_id}"] = idea_text
+                            elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].remove(idea_id)
+                                if f"idea_{idea_id}" in st.session_state:
+                                    del st.session_state[f"idea_{idea_id}"]
+                            
+                            # Highlight selected ideas
+                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                            st.markdown(f'<div class="result-content" style="{highlight_style}"><strong>{i}. {feature}</strong></div>', unsafe_allow_html=True)
+                            if rationale:
+                                st.markdown(f'<div style="margin-top: 0.5rem; margin-bottom: 1rem; color: #666666; font-size: 0.9375rem; font-style: italic;">{rationale}</div>', unsafe_allow_html=True)
                             if i < len(features):
                                 st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(feature_ideas):
@@ -452,27 +514,38 @@ def render_main() -> None:
             if image_urls:
                 for i, url in enumerate(image_urls, 1):
                     if url:
-                        col_img, col_btn = st.columns([4, 1])
-                        with col_img:
-                            # Display smaller image
-                            st.image(url, width=400)
-                            # Display conceptual explanation text below the image
-                            if i <= len(sketch_concepts) and sketch_concepts[i - 1]:
-                                st.markdown(
-                                    f'<p style="margin-top: 0.75rem; margin-bottom: 1.5rem; color: #666666; font-size: 0.9375rem; line-height: 1.6;">{sketch_concepts[i - 1]}</p>',
-                                    unsafe_allow_html=True
-                                )
-                        with col_btn:
-                            button_key = f"refine_sketch_{i}"
-                            concept_text = sketch_concepts[i - 1] if i <= len(sketch_concepts) else ""
-                            if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                loop = asyncio.new_event_loop()
-                                asyncio.set_event_loop(loop)
-                                try:
-                                    loop.run_until_complete(refine_from_idea(concept_text))
-                                finally:
-                                    loop.close()
-                                st.rerun()
+                        concept_text = sketch_concepts[i - 1] if i <= len(sketch_concepts) else ""
+                        idea_id = f"sketch_{i}"
+                        
+                        # Initialize selected_ideas if needed
+                        if "selected_ideas" not in st.session_state:
+                            st.session_state["selected_ideas"] = []
+                        
+                        checkbox_key = f"checkbox_{idea_id}"
+                        checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                        
+                        # Update selection based on checkbox
+                        if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                            st.session_state["selected_ideas"].append(idea_id)
+                            st.session_state[f"idea_{idea_id}"] = concept_text
+                        elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
+                            st.session_state["selected_ideas"].remove(idea_id)
+                            if f"idea_{idea_id}" in st.session_state:
+                                del st.session_state[f"idea_{idea_id}"]
+                        
+                        # Highlight selected sketches
+                        is_selected = idea_id in st.session_state["selected_ideas"]
+                        highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                        st.markdown(f'<div style="{highlight_style}">', unsafe_allow_html=True)
+                        # Display smaller image
+                        st.image(url, width=400)
+                        # Display conceptual explanation text below the image
+                        if concept_text:
+                            st.markdown(
+                                f'<p style="margin-top: 0.75rem; margin-bottom: 1.5rem; color: #666666; font-size: 0.9375rem; line-height: 1.6;">{concept_text}</p>',
+                                unsafe_allow_html=True
+                            )
+                        st.markdown('</div>', unsafe_allow_html=True)
                         if i < len(image_urls):
                             st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
                     else:
@@ -498,40 +571,58 @@ def render_main() -> None:
                     if persona:
                         persona_name = persona.get("name", "User")
                         persona_desc = persona.get("description", "")
-                        col_persona, col_btn = st.columns([4, 1])
-                        with col_persona:
-                            st.markdown(f'<h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Persona: {persona_name}</h4>', unsafe_allow_html=True)
-                            if persona_desc:
-                                st.markdown(f'<div class="result-content">{persona_desc}</div>', unsafe_allow_html=True)
-                        with col_btn:
-                            button_key = f"refine_persona_{segment_idx}"
-                            if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                idea_text = f"Persona: {persona_name}. {persona_desc}"
-                                loop = asyncio.new_event_loop()
-                                asyncio.set_event_loop(loop)
-                                try:
-                                    loop.run_until_complete(refine_from_idea(idea_text))
-                                finally:
-                                    loop.close()
-                                st.rerun()
+                        idea_id = f"persona_{segment_idx}"
+                        idea_text = f"Persona: {persona_name}. {persona_desc}"
+                        
+                        # Initialize selected_ideas if needed
+                        if "selected_ideas" not in st.session_state:
+                            st.session_state["selected_ideas"] = []
+                        
+                        checkbox_key = f"checkbox_{idea_id}"
+                        checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                        
+                        # Update selection based on checkbox
+                        if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                            st.session_state["selected_ideas"].append(idea_id)
+                            st.session_state[f"idea_{idea_id}"] = idea_text
+                        elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
+                            st.session_state["selected_ideas"].remove(idea_id)
+                            if f"idea_{idea_id}" in st.session_state:
+                                del st.session_state[f"idea_{idea_id}"]
+                        
+                        # Highlight selected personas
+                        is_selected = idea_id in st.session_state["selected_ideas"]
+                        highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                        st.markdown(f'<h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Persona: {persona_name}</h4>', unsafe_allow_html=True)
+                        if persona_desc:
+                            st.markdown(f'<div class="result-content" style="{highlight_style}">{persona_desc}</div>', unsafe_allow_html=True)
                     
                     if scenarios:
                         st.markdown('<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Key Scenarios:</h4>', unsafe_allow_html=True)
                         for i, scenario in enumerate(scenarios, 1):
-                            col_scenario, col_btn = st.columns([4, 1])
-                            with col_scenario:
-                                st.markdown(f'<div class="result-content"><strong>{i}.</strong> {scenario}</div>', unsafe_allow_html=True)
-                            with col_btn:
-                                button_key = f"refine_scenario_{segment_idx}_{i}"
-                                if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                    idea_text = f"Persona: {persona_name if persona else 'User'}. Scenario: {scenario}"
-                                    loop = asyncio.new_event_loop()
-                                    asyncio.set_event_loop(loop)
-                                    try:
-                                        loop.run_until_complete(refine_from_idea(idea_text))
-                                    finally:
-                                        loop.close()
-                                    st.rerun()
+                            idea_id = f"scenario_{segment_idx}_{i}"
+                            idea_text = f"Persona: {persona_name if persona else 'User'}. Scenario: {scenario}"
+                            
+                            # Initialize selected_ideas if needed
+                            if "selected_ideas" not in st.session_state:
+                                st.session_state["selected_ideas"] = []
+                            
+                            checkbox_key = f"checkbox_{idea_id}"
+                            checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                            
+                            # Update selection based on checkbox
+                            if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].append(idea_id)
+                                st.session_state[f"idea_{idea_id}"] = idea_text
+                            elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].remove(idea_id)
+                                if f"idea_{idea_id}" in st.session_state:
+                                    del st.session_state[f"idea_{idea_id}"]
+                            
+                            # Highlight selected scenarios
+                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                            st.markdown(f'<div class="result-content" style="{highlight_style}"><strong>{i}.</strong> {scenario}</div>', unsafe_allow_html=True)
                             if i < len(scenarios):
                                 st.markdown("<div style='margin: 0.5rem 0;'></div>", unsafe_allow_html=True)
                     
@@ -566,21 +657,31 @@ def render_main() -> None:
                                 # Fallback for unexpected format
                                 title = f"Layout {i}"
                                 desc = str(layout)
-                            col_layout, col_btn = st.columns([4, 1])
-                            with col_layout:
-                                st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
-                                st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
-                            with col_btn:
-                                button_key = f"refine_layout_{theme_name}_{i}"
-                                if st.button("Refine", key=button_key, disabled=st.session_state.get("is_generating")):
-                                    idea_text = f"{title}: {desc}"
-                                    loop = asyncio.new_event_loop()
-                                    asyncio.set_event_loop(loop)
-                                    try:
-                                        loop.run_until_complete(refine_from_idea(idea_text))
-                                    finally:
-                                        loop.close()
-                                    st.rerun()
+                            
+                            idea_id = f"layout_{theme_name}_{i}"
+                            idea_text = f"{title}: {desc}"
+                            
+                            # Initialize selected_ideas if needed
+                            if "selected_ideas" not in st.session_state:
+                                st.session_state["selected_ideas"] = []
+                            
+                            checkbox_key = f"checkbox_{idea_id}"
+                            checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                            
+                            # Update selection based on checkbox
+                            if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].append(idea_id)
+                                st.session_state[f"idea_{idea_id}"] = idea_text
+                            elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].remove(idea_id)
+                                if f"idea_{idea_id}" in st.session_state:
+                                    del st.session_state[f"idea_{idea_id}"]
+                            
+                            # Highlight selected layouts
+                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                            st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
+                            st.markdown(f'<div class="result-content" style="{highlight_style}">{desc}</div>', unsafe_allow_html=True)
                             if i < len(layouts):
                                 st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(layout_results):
