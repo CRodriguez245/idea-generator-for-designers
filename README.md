@@ -99,7 +99,8 @@ idea-generator/
   - Keep sensitive values in `.env` locally and Streamlit Cloud secrets in production.
   - Update prompt templates in `prompts/`; record major changes in `decisions.md`.
 - **Deployment Path**
-  - Start locally, then deploy to Streamlit Community Cloud with the same repository.
+  - **REQUIRED FOR SUBMISSION**: Deploy to Streamlit Community Cloud (see `DEPLOYMENT.md` for step-by-step instructions).
   - Configure secrets via Streamlit Cloud dashboard before sharing with testers.
+  - Once deployed, your app will be accessible via a public URL (e.g., `https://idea-generator-for-designers.streamlit.app`).
 - **Collaboration**
   - See `agent_instructions.md` for detailed development workflow expectations.
