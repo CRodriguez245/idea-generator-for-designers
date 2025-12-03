@@ -992,7 +992,8 @@ div[data-testid]:empty {{
 }}
 
 /* Selection buttons - styled to look like regular text but legible */
-.stButton > button[key^="select_"] {{
+.stButton > button[key^="select_"],
+button[key^="select_"] {{
     background-color: #ffffff !important;
     color: #000000 !important;
     border: 1px solid #e0e0e0 !important;
@@ -1016,7 +1017,23 @@ div[data-testid]:empty {{
     display: block !important;
 }}
 
-.stButton > button[key^="select_"]:hover {{
+/* Ensure text inside selection buttons is visible */
+.stButton > button[key^="select_"] *,
+button[key^="select_"] *,
+.stButton > button[key^="select_"] span,
+button[key^="select_"] span,
+.stButton > button[key^="select_"] div,
+button[key^="select_"] div,
+.stButton > button[key^="select_"] p,
+button[key^="select_"] p {{
+    color: #000000 !important;
+    background-color: transparent !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}}
+
+.stButton > button[key^="select_"]:hover,
+button[key^="select_"]:hover {{
     background-color: #f5f5f5 !important;
     border-color: #1976d2 !important;
     border-width: 2px !important;
