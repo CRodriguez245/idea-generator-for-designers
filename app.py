@@ -991,29 +991,36 @@ div[data-testid]:empty {{
     font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
-/* Selection buttons - styled to look like regular text */
+/* Selection buttons - styled to look like regular text but legible */
 .stButton > button[key^="select_"] {{
-    background-color: transparent !important;
-    color: #1a1a1a !important;
-    border: none !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #e0e0e0 !important;
     font-weight: normal !important;
-    padding: 0.5rem 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    padding: 0.875rem 1rem !important;
+    border-radius: 6px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
     text-align: left !important;
     font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
-    font-size: 1rem !important;
-    line-height: 1.7 !important;
+    font-size: 1.0625rem !important;
+    line-height: 1.6 !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     width: 100% !important;
-    margin: 0 !important;
+    margin: 0.5rem 0 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    min-height: auto !important;
+    height: auto !important;
+    display: block !important;
 }}
 
 .stButton > button[key^="select_"]:hover {{
     background-color: #f5f5f5 !important;
-    border-left: 2px solid #1976d2 !important;
-    padding-left: 0.5rem !important;
+    border-color: #1976d2 !important;
+    border-width: 2px !important;
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15) !important;
 }}
 
 .stButton > button[kind="secondary"]:hover,
