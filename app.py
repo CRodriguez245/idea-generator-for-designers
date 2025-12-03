@@ -425,32 +425,26 @@ def render_main() -> None:
                             if "selected_ideas" not in st.session_state:
                                 st.session_state["selected_ideas"] = []
                             
-                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            # Create columns for text and checkbox
+                            col_text, col_checkbox = st.columns([0.95, 0.05])
                             
-                            # Make the element clickable - use button styled as text
-                            button_key = f"select_{idea_id}"
-                            if st.button(f"{i}. {stmt}", key=button_key, use_container_width=True):
-                                # Toggle selection
-                                if idea_id in st.session_state["selected_ideas"]:
+                            with col_text:
+                                is_selected = idea_id in st.session_state["selected_ideas"]
+                                highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                                st.markdown(f'<div class="result-content" style="{highlight_style}"><strong>{i}.</strong> {stmt}</div>', unsafe_allow_html=True)
+                            
+                            with col_checkbox:
+                                checkbox_key = f"checkbox_{idea_id}"
+                                checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                                
+                                # Update selection based on checkbox
+                                if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                    st.session_state["selected_ideas"].append(idea_id)
+                                    st.session_state[f"idea_{idea_id}"] = idea_text
+                                elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
                                     st.session_state["selected_ideas"].remove(idea_id)
                                     if f"idea_{idea_id}" in st.session_state:
                                         del st.session_state[f"idea_{idea_id}"]
-                                else:
-                                    st.session_state["selected_ideas"].append(idea_id)
-                                    st.session_state[f"idea_{idea_id}"] = idea_text
-                                st.rerun()
-                            
-                            # Apply visual styling for selected items via CSS
-                            if is_selected:
-                                st.markdown(f"""
-                                    <style>
-                                        button[key="{button_key}"] {{
-                                            background-color: #e3f2fd !important;
-                                            border-left: 3px solid #1976d2 !important;
-                                            border-radius: 4px !important;
-                                        }}
-                                    </style>
-                                """, unsafe_allow_html=True)
                             
                             if i < len(statements):
                                 st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
@@ -487,36 +481,29 @@ def render_main() -> None:
                             if "selected_ideas" not in st.session_state:
                                 st.session_state["selected_ideas"] = []
                             
-                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            # Create columns for text and checkbox
+                            col_text, col_checkbox = st.columns([0.95, 0.05])
                             
-                            # Make the feature clickable
-                            button_key = f"select_{idea_id}"
-                            button_text = f"{i}. {feature}"
-                            if st.button(button_text, key=button_key, use_container_width=True):
-                                # Toggle selection
-                                if idea_id in st.session_state["selected_ideas"]:
+                            with col_text:
+                                is_selected = idea_id in st.session_state["selected_ideas"]
+                                highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                                st.markdown(f'<div class="result-content" style="{highlight_style}"><strong>{i}. {feature}</strong></div>', unsafe_allow_html=True)
+                                if rationale:
+                                    st.markdown(f'<div style="margin-top: 0.5rem; margin-bottom: 1rem; color: #666666; font-size: 0.9375rem; font-style: italic;">{rationale}</div>', unsafe_allow_html=True)
+                            
+                            with col_checkbox:
+                                checkbox_key = f"checkbox_{idea_id}"
+                                checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                                
+                                # Update selection based on checkbox
+                                if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                    st.session_state["selected_ideas"].append(idea_id)
+                                    st.session_state[f"idea_{idea_id}"] = idea_text
+                                elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
                                     st.session_state["selected_ideas"].remove(idea_id)
                                     if f"idea_{idea_id}" in st.session_state:
                                         del st.session_state[f"idea_{idea_id}"]
-                                else:
-                                    st.session_state["selected_ideas"].append(idea_id)
-                                    st.session_state[f"idea_{idea_id}"] = idea_text
-                                st.rerun()
                             
-                            # Apply visual styling for selected items via CSS
-                            if is_selected:
-                                st.markdown(f"""
-                                    <style>
-                                        button[key="{button_key}"] {{
-                                            background-color: #e3f2fd !important;
-                                            border-left: 3px solid #1976d2 !important;
-                                            border-radius: 4px !important;
-                                        }}
-                                    </style>
-                                """, unsafe_allow_html=True)
-                            
-                            if rationale:
-                                st.markdown(f'<div style="margin-top: 0.5rem; margin-bottom: 1rem; color: #666666; font-size: 0.9375rem; font-style: italic;">{rationale}</div>', unsafe_allow_html=True)
                             if i < len(features):
                                 st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(feature_ideas):
@@ -544,35 +531,13 @@ def render_main() -> None:
                         if "selected_ideas" not in st.session_state:
                             st.session_state["selected_ideas"] = []
                         
-                        is_selected = idea_id in st.session_state["selected_ideas"]
+                        # Create columns for content and checkbox
+                        col_content, col_checkbox = st.columns([0.95, 0.05])
                         
-                        # Make the sketch clickable - wrap in a container
-                        container_key = f"sketch_container_{i}"
-                        with st.container():
-                            button_key = f"select_{idea_id}"
-                            if st.button(f"Sketch {i}", key=button_key, use_container_width=True):
-                                # Toggle selection
-                                if idea_id in st.session_state["selected_ideas"]:
-                                    st.session_state["selected_ideas"].remove(idea_id)
-                                    if f"idea_{idea_id}" in st.session_state:
-                                        del st.session_state[f"idea_{idea_id}"]
-                                else:
-                                    st.session_state["selected_ideas"].append(idea_id)
-                                    st.session_state[f"idea_{idea_id}"] = concept_text
-                                st.rerun()
-                            
-                            # Apply visual styling for selected items via CSS
-                            if is_selected:
-                                st.markdown(f"""
-                                    <style>
-                                        button[key="{button_key}"] {{
-                                            background-color: #e3f2fd !important;
-                                            border-left: 3px solid #1976d2 !important;
-                                            border-radius: 4px !important;
-                                        }}
-                                    </style>
-                                """, unsafe_allow_html=True)
-                            
+                        with col_content:
+                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                            st.markdown(f'<div style="{highlight_style}">', unsafe_allow_html=True)
                             # Display smaller image
                             st.image(url, width=400)
                             # Display conceptual explanation text below the image
@@ -581,6 +546,21 @@ def render_main() -> None:
                                     f'<p style="margin-top: 0.75rem; margin-bottom: 1.5rem; color: #666666; font-size: 0.9375rem; line-height: 1.6;">{concept_text}</p>',
                                     unsafe_allow_html=True
                                 )
+                            st.markdown('</div>', unsafe_allow_html=True)
+                        
+                        with col_checkbox:
+                            checkbox_key = f"checkbox_{idea_id}"
+                            checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                            
+                            # Update selection based on checkbox
+                            if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].append(idea_id)
+                                st.session_state[f"idea_{idea_id}"] = concept_text
+                            elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].remove(idea_id)
+                                if f"idea_{idea_id}" in st.session_state:
+                                    del st.session_state[f"idea_{idea_id}"]
+                        
                         if i < len(image_urls):
                             st.markdown("<div style='margin: 2rem 0; border-top: 1px solid #e0e0e0;'></div>", unsafe_allow_html=True)
                     else:
@@ -613,36 +593,28 @@ def render_main() -> None:
                         if "selected_ideas" not in st.session_state:
                             st.session_state["selected_ideas"] = []
                         
-                        is_selected = idea_id in st.session_state["selected_ideas"]
+                        # Create columns for text and checkbox
+                        col_text, col_checkbox = st.columns([0.95, 0.05])
                         
-                        # Make the persona clickable
-                        button_key = f"select_{idea_id}"
-                        button_text = f"Persona: {persona_name}"
-                        if st.button(button_text, key=button_key, use_container_width=True):
-                            # Toggle selection
-                            if idea_id in st.session_state["selected_ideas"]:
+                        with col_text:
+                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                            st.markdown(f'<h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Persona: {persona_name}</h4>', unsafe_allow_html=True)
+                            if persona_desc:
+                                st.markdown(f'<div class="result-content" style="{highlight_style}">{persona_desc}</div>', unsafe_allow_html=True)
+                        
+                        with col_checkbox:
+                            checkbox_key = f"checkbox_{idea_id}"
+                            checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                            
+                            # Update selection based on checkbox
+                            if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                st.session_state["selected_ideas"].append(idea_id)
+                                st.session_state[f"idea_{idea_id}"] = idea_text
+                            elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
                                 st.session_state["selected_ideas"].remove(idea_id)
                                 if f"idea_{idea_id}" in st.session_state:
                                     del st.session_state[f"idea_{idea_id}"]
-                            else:
-                                st.session_state["selected_ideas"].append(idea_id)
-                                st.session_state[f"idea_{idea_id}"] = idea_text
-                            st.rerun()
-                        
-                        # Apply visual styling for selected items via CSS
-                        if is_selected:
-                            st.markdown(f"""
-                                <style>
-                                    button[key="{button_key}"] {{
-                                        background-color: #e3f2fd !important;
-                                        border-left: 3px solid #1976d2 !important;
-                                        border-radius: 4px !important;
-                                    }}
-                                </style>
-                            """, unsafe_allow_html=True)
-                        
-                        if persona_desc:
-                            st.markdown(f'<div class="result-content">{persona_desc}</div>', unsafe_allow_html=True)
                     
                     if scenarios:
                         st.markdown('<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Key Scenarios:</h4>', unsafe_allow_html=True)
@@ -654,33 +626,26 @@ def render_main() -> None:
                             if "selected_ideas" not in st.session_state:
                                 st.session_state["selected_ideas"] = []
                             
-                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            # Create columns for text and checkbox
+                            col_text, col_checkbox = st.columns([0.95, 0.05])
                             
-                            # Make the scenario clickable
-                            button_key = f"select_{idea_id}"
-                            button_text = f"{i}. {scenario}"
-                            if st.button(button_text, key=button_key, use_container_width=True):
-                                # Toggle selection
-                                if idea_id in st.session_state["selected_ideas"]:
+                            with col_text:
+                                is_selected = idea_id in st.session_state["selected_ideas"]
+                                highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                                st.markdown(f'<div class="result-content" style="{highlight_style}"><strong>{i}.</strong> {scenario}</div>', unsafe_allow_html=True)
+                            
+                            with col_checkbox:
+                                checkbox_key = f"checkbox_{idea_id}"
+                                checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                                
+                                # Update selection based on checkbox
+                                if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                    st.session_state["selected_ideas"].append(idea_id)
+                                    st.session_state[f"idea_{idea_id}"] = idea_text
+                                elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
                                     st.session_state["selected_ideas"].remove(idea_id)
                                     if f"idea_{idea_id}" in st.session_state:
                                         del st.session_state[f"idea_{idea_id}"]
-                                else:
-                                    st.session_state["selected_ideas"].append(idea_id)
-                                    st.session_state[f"idea_{idea_id}"] = idea_text
-                                st.rerun()
-                            
-                            # Apply visual styling for selected items via CSS
-                            if is_selected:
-                                st.markdown(f"""
-                                    <style>
-                                        button[key="{button_key}"] {{
-                                            background-color: #e3f2fd !important;
-                                            border-left: 3px solid #1976d2 !important;
-                                            border-radius: 4px !important;
-                                        }}
-                                    </style>
-                                """, unsafe_allow_html=True)
                             
                             if i < len(scenarios):
                                 st.markdown("<div style='margin: 0.5rem 0;'></div>", unsafe_allow_html=True)
@@ -724,35 +689,28 @@ def render_main() -> None:
                             if "selected_ideas" not in st.session_state:
                                 st.session_state["selected_ideas"] = []
                             
-                            is_selected = idea_id in st.session_state["selected_ideas"]
+                            # Create columns for text and checkbox
+                            col_text, col_checkbox = st.columns([0.95, 0.05])
                             
-                            # Make the layout clickable
-                            button_key = f"select_{idea_id}"
-                            button_text = f"{i}. {title}"
-                            if st.button(button_text, key=button_key, use_container_width=True):
-                                # Toggle selection
-                                if idea_id in st.session_state["selected_ideas"]:
+                            with col_text:
+                                is_selected = idea_id in st.session_state["selected_ideas"]
+                                highlight_style = "background-color: #e3f2fd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #1976d2;" if is_selected else ""
+                                st.markdown(f'<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">{i}. {title}</h4>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="result-content" style="{highlight_style}">{desc}</div>', unsafe_allow_html=True)
+                            
+                            with col_checkbox:
+                                checkbox_key = f"checkbox_{idea_id}"
+                                checkbox_value = st.checkbox("", key=checkbox_key, value=(idea_id in st.session_state["selected_ideas"]), label_visibility="collapsed")
+                                
+                                # Update selection based on checkbox
+                                if checkbox_value and idea_id not in st.session_state["selected_ideas"]:
+                                    st.session_state["selected_ideas"].append(idea_id)
+                                    st.session_state[f"idea_{idea_id}"] = idea_text
+                                elif not checkbox_value and idea_id in st.session_state["selected_ideas"]:
                                     st.session_state["selected_ideas"].remove(idea_id)
                                     if f"idea_{idea_id}" in st.session_state:
                                         del st.session_state[f"idea_{idea_id}"]
-                                else:
-                                    st.session_state["selected_ideas"].append(idea_id)
-                                    st.session_state[f"idea_{idea_id}"] = idea_text
-                                st.rerun()
                             
-                            # Apply visual styling for selected items via CSS
-                            if is_selected:
-                                st.markdown(f"""
-                                    <style>
-                                        button[key="{button_key}"] {{
-                                            background-color: #e3f2fd !important;
-                                            border-left: 3px solid #1976d2 !important;
-                                            border-radius: 4px !important;
-                                        }}
-                                    </style>
-                                """, unsafe_allow_html=True)
-                            
-                            st.markdown(f'<div class="result-content">{desc}</div>', unsafe_allow_html=True)
                             if i < len(layouts):
                                 st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
                         if theme_count < len(layout_results):
@@ -991,53 +949,13 @@ div[data-testid]:empty {{
     font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
 }}
 
-/* Selection buttons - styled to look like regular text but legible */
-.stButton > button[key^="select_"],
-button[key^="select_"] {{
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    border: 1px solid #e0e0e0 !important;
-    font-weight: normal !important;
-    padding: 0.875rem 1rem !important;
-    border-radius: 6px !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-    text-align: left !important;
-    font-family: 'Helvetica', 'Helvetica Neue', Arial, sans-serif !important;
-    font-size: 1.0625rem !important;
-    line-height: 1.6 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    width: 100% !important;
-    margin: 0.5rem 0 !important;
-    white-space: normal !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    min-height: auto !important;
-    height: auto !important;
-    display: block !important;
-}}
-
-/* Ensure text inside selection buttons is visible */
-.stButton > button[key^="select_"] *,
-button[key^="select_"] *,
-.stButton > button[key^="select_"] span,
-button[key^="select_"] span,
-.stButton > button[key^="select_"] div,
-button[key^="select_"] div,
-.stButton > button[key^="select_"] p,
-button[key^="select_"] p {{
-    color: #000000 !important;
-    background-color: transparent !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-}}
-
-.stButton > button[key^="select_"]:hover,
-button[key^="select_"]:hover {{
-    background-color: #f5f5f5 !important;
-    border-color: #1976d2 !important;
-    border-width: 2px !important;
-    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15) !important;
+/* Highlight selected ideas */
+.selected-idea {{
+    background-color: #e3f2fd !important;
+    border-left: 4px solid #1976d2 !important;
+    padding-left: 1rem !important;
+    margin-left: -1rem !important;
+    border-radius: 4px;
 }}
 
 .stButton > button[kind="secondary"]:hover,
