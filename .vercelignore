@@ -1,11 +1,8 @@
+server/package-lock.json
+**/package-lock.json
 node_modules
 .env
 .env.local
 data
 *.db
 *.db-journal
-__pycache__
-*.pyc
-venv
-env
-
