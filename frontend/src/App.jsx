@@ -79,7 +79,8 @@ function App() {
     setIdeaTexts({})
 
     try {
-      const response = await fetch('/api/generate', {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${apiUrl}/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +145,8 @@ function App() {
     setIsRefinementExpanded(false)
 
     try {
-      const response = await fetch('/api/generate', {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${apiUrl}/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
