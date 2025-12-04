@@ -92,8 +92,23 @@ function App() {
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Generation failed')
+        // Try to parse JSON error, but handle HTML errors from Vercel
+        let errorMessage = 'Generation failed'
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const error = await response.json()
+            errorMessage = error.error || errorMessage
+          } catch (e) {
+            errorMessage = `Server error: ${response.status} ${response.statusText}`
+          }
+        } else {
+          // HTML error page (Vercel default)
+          const text = await response.text()
+          errorMessage = `Server error: ${response.status} ${response.statusText}. Please check the server logs.`
+          console.error('Non-JSON error response:', text.substring(0, 200))
+        }
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
