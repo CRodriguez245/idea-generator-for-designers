@@ -40,6 +40,8 @@ export default async (req, res) => {
       url: req.url,
       hasBody: !!req.body,
       timestamp: new Date().toISOString(),
+      cwd: process.cwd(),
+      __dirname: __dirname,
     })
     
     if (req.method !== 'POST') {
@@ -114,6 +116,9 @@ export default async (req, res) => {
     if (error.response) {
       console.error('Response error:', error.response.status, error.response.data)
     }
+    if (error.code === 'MODULE_NOT_FOUND') {
+      console.error('Module not found - this indicates an import path issue')
+    }
     
     // Ensure we return JSON, not HTML
     if (res.headersSent) {
@@ -122,7 +127,9 @@ export default async (req, res) => {
     }
     
     let errorMsg = error.message || 'Generation failed'
-    if (error.error?.message) {
+    if (error.code === 'MODULE_NOT_FOUND') {
+      errorMsg = 'Server module not found. Please check deployment configuration.'
+    } else if (error.error?.message) {
       errorMsg = error.error.message
     } else if (error.response?.data?.error?.message) {
       errorMsg = error.response.data.error.message
@@ -130,7 +137,8 @@ export default async (req, res) => {
     
     return res.status(500).json({ 
       error: errorMsg,
-      type: error.name || 'Error'
+      type: error.name || 'Error',
+      code: error.code
     })
   }
 }
