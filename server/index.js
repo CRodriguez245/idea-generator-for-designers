@@ -9,8 +9,14 @@ import { SessionStore } from './utils/session-store.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-// Load .env from server directory
-dotenv.config({ path: join(__dirname, '.env') })
+// Load .env from server directory (if it exists)
+// On Vercel, environment variables are set directly, so .env file is optional
+try {
+  dotenv.config({ path: join(__dirname, '.env') })
+} catch (error) {
+  // .env file not found, which is fine on Vercel
+  console.log('No .env file found, using environment variables')
+}
 
 const app = express()
 const PORT = process.env.PORT || 5001
@@ -35,7 +41,12 @@ app.use(express.json())
 // Initialize session store (with error handling)
 let sessionStore
 try {
-  sessionStore = new SessionStore(join(__dirname, '../data/sessions.db'))
+  // On Vercel, use a simple path that won't cause issues
+  const dbPath = process.env.VERCEL === '1' 
+    ? '/tmp/sessions.db'  // Vercel allows /tmp
+    : join(__dirname, '../data/sessions.db')
+  sessionStore = new SessionStore(dbPath)
+  console.log('Session store initialized')
 } catch (error) {
   console.error('Failed to initialize session store:', error)
   // Create a minimal in-memory store as fallback
@@ -45,6 +56,7 @@ try {
     getSession: () => null,
     purgeExpiredSessions: () => 0,
   }
+  console.log('Using fallback in-memory session store')
 }
 
 // Health check

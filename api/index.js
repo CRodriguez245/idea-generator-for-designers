@@ -1,29 +1,40 @@
 // Vercel serverless function wrapper for Express app
-import app from '../server/index.js'
+import appModule from '../server/index.js'
+
+const app = appModule.default || appModule
 
 // Export as Vercel serverless function handler
 export default (req, res) => {
-  // Ensure we always return JSON
-  res.setHeader('Content-Type', 'application/json')
+  // Always set JSON content type first
+  if (!res.headersSent) {
+    res.setHeader('Content-Type', 'application/json')
+  }
   
   try {
     // Log the incoming request for debugging
     console.log('Vercel function called:', {
       method: req.method,
       url: req.url,
-      path: req.path,
+      path: req.path || req.url,
       originalUrl: req.originalUrl,
-      query: req.query
     })
+    
+    // If app failed to load, return error
+    if (!app) {
+      console.error('Express app not available')
+      return res.status(500).json({ error: 'Server initialization failed' })
+    }
     
     // Pass request to Express app
     // Express will handle routing and responses
-    app(req, res)
+    return app(req, res)
   } catch (error) {
     console.error('Handler error:', error)
+    console.error('Error stack:', error.stack)
     if (!res.headersSent) {
-      res.status(500).json({ 
-        error: error.message || 'Internal server error'
+      return res.status(500).json({ 
+        error: error.message || 'Internal server error',
+        type: error.constructor.name
       })
     }
   }
