@@ -4,6 +4,19 @@
 
 ---
 
+## 📦 Available Versions
+
+This project now has **two implementations**:
+
+1. **Python/Streamlit Version** (Original) - See setup instructions below
+2. **React/JavaScript/Tailwind Version** (New) - See [README-REACT.md](./README-REACT.md) for setup
+
+Both versions provide the same functionality. Choose based on your preference:
+- **Python/Streamlit**: Easier setup, Python ecosystem
+- **React/JavaScript**: Modern web stack, more customization, better for production web apps
+
+---
+
 ## 🧠 Overview
 The **Idea Generator for Designers** is a lightweight AI-powered web app that helps designers rapidly explore creative directions from a single design challenge.
 
