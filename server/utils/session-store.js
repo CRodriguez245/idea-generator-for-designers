@@ -13,34 +13,35 @@ export class SessionStore {
       return
     }
     
-    // Try to use better-sqlite3 for local development
-    try {
-      // Dynamic import - will fail if module not available
+    // Try to use better-sqlite3 for local development only
+    // Skip entirely on Vercel to avoid any import issues
+    this.inMemory = true
+    this.sessions = new Map()
+    
+    // Only try to use SQLite locally (not on Vercel)
+    if (process.env.VERCEL !== '1' && !process.env.VERCEL_ENV) {
+      // Try dynamic import asynchronously (non-blocking)
       import('better-sqlite3').then(({ default: Database }) => {
-        this.inMemory = false
-        
-        // Ensure data directory exists
-        const dbDir = dirname(databasePath)
-        if (!existsSync(dbDir)) {
-          mkdirSync(dbDir, { recursive: true })
-        }
+        try {
+          this.inMemory = false
+          
+          // Ensure data directory exists
+          const dbDir = dirname(databasePath)
+          if (!existsSync(dbDir)) {
+            mkdirSync(dbDir, { recursive: true })
+          }
 
-        this.db = new Database(databasePath)
-        this.initSchema()
+          this.db = new Database(databasePath)
+          this.initSchema()
+          console.log('Using SQLite database for sessions')
+        } catch (dbError) {
+          console.warn('Failed to initialize SQLite, using in-memory:', dbError.message)
+          this.inMemory = true
+        }
       }).catch(() => {
-        // Fallback to in-memory if import fails
-        this.inMemory = true
-        this.sessions = new Map()
-        console.warn('better-sqlite3 not available, using in-memory store')
+        // better-sqlite3 not available, already using in-memory
+        console.log('better-sqlite3 not available, using in-memory store')
       })
-      
-      // For now, default to in-memory until async import completes
-      this.inMemory = true
-      this.sessions = new Map()
-    } catch (e) {
-      this.inMemory = true
-      this.sessions = new Map()
-      console.warn('Using in-memory session store')
     }
   }
 

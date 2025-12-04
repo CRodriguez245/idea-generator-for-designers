@@ -32,8 +32,20 @@ app.use((req, res, next) => {
 
 app.use(express.json())
 
-// Initialize session store
-const sessionStore = new SessionStore(join(__dirname, '../data/sessions.db'))
+// Initialize session store (with error handling)
+let sessionStore
+try {
+  sessionStore = new SessionStore(join(__dirname, '../data/sessions.db'))
+} catch (error) {
+  console.error('Failed to initialize session store:', error)
+  // Create a minimal in-memory store as fallback
+  sessionStore = {
+    createSession: () => {},
+    updateSession: () => {},
+    getSession: () => null,
+    purgeExpiredSessions: () => 0,
+  }
+}
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -151,10 +163,12 @@ try {
   console.error('Warning: Failed to purge expired sessions:', error)
 }
 
-// 404 handler
-app.use((req, res) => {
-  console.log(`404 - Route not found: ${req.method} ${req.path}`)
-  res.status(404).json({ error: 'Route not found', path: req.path, method: req.method })
+// 404 handler - must be before error handler
+app.use((req, res, next) => {
+  console.log(`404 - Route not found: ${req.method} ${req.path} (originalUrl: ${req.originalUrl})`)
+  if (!res.headersSent) {
+    res.status(404).json({ error: 'Route not found', path: req.path, method: req.method, url: req.url })
+  }
 })
 
 // Error handler
