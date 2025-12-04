@@ -29,6 +29,7 @@ app.use((req, res, next) => {
   next()
 })
 
+
 app.use(express.json())
 
 // Initialize session store
@@ -36,6 +37,9 @@ const sessionStore = new SessionStore(join(__dirname, '../data/sessions.db'))
 
 // Health check
 app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' })
+})
+app.get('/health', (req, res) => {
   res.json({ status: 'ok' })
 })
 
@@ -52,8 +56,8 @@ app.get('/api/test-key', (req, res) => {
   })
 })
 
-// Generate endpoint
-app.post('/api/generate', async (req, res) => {
+// Generate endpoint handler
+const handleGenerate = async (req, res) => {
   try {
     const { challenge, refineFrom, sessionId } = req.body
 
@@ -130,7 +134,12 @@ app.post('/api/generate', async (req, res) => {
     console.error('Final error message:', errorMsg)
     res.status(500).json({ error: errorMsg })
   }
-})
+}
+
+// Register generate endpoint
+app.post('/api/generate', handleGenerate)
+// Also register without /api for Vercel (Vercel adds /api prefix in routing)
+app.post('/generate', handleGenerate)
 
 // Purge expired sessions (run on startup)
 try {
@@ -141,6 +150,20 @@ try {
 } catch (error) {
   console.error('Warning: Failed to purge expired sessions:', error)
 }
+
+// 404 handler
+app.use((req, res) => {
+  console.log(`404 - Route not found: ${req.method} ${req.path}`)
+  res.status(404).json({ error: 'Route not found', path: req.path, method: req.method })
+})
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err)
+  if (!res.headersSent) {
+    res.status(500).json({ error: err.message || 'Internal server error' })
+  }
+})
 
 // Only start server if not in Vercel environment
 if (process.env.VERCEL !== '1') {
